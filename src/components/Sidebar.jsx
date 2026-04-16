@@ -1,77 +1,148 @@
+// Sidebar.jsx — Dark teal sidebar, fixed borderRadius values
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { logout } from '../api.js'
+import Drawer from '@mui/material/Drawer'
+import Box from '@mui/material/Box'
+import Typography from '@mui/material/Typography'
+import List from '@mui/material/List'
+import ListItem from '@mui/material/ListItem'
+import ListItemButton from '@mui/material/ListItemButton'
+import ListItemIcon from '@mui/material/ListItemIcon'
+import ListItemText from '@mui/material/ListItemText'
+import Avatar from '@mui/material/Avatar'
+import Button from '@mui/material/Button'
+import BottomNavigation from '@mui/material/BottomNavigation'
+import BottomNavigationAction from '@mui/material/BottomNavigationAction'
+import Paper from '@mui/material/Paper'
+import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded'
+import MedicalServicesRoundedIcon from '@mui/icons-material/MedicalServicesRounded'
+import EventNoteRoundedIcon from '@mui/icons-material/EventNoteRounded'
+import PersonRoundedIcon from '@mui/icons-material/PersonRounded'
+import CalendarMonthRoundedIcon from '@mui/icons-material/CalendarMonthRounded'
+import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded'
+import AddRoundedIcon from '@mui/icons-material/AddRounded'
+import LocalHospitalIcon from '@mui/icons-material/LocalHospital'
+import { logout, getUser } from '../api.js'
 
-const navItems = [
-  { path: '/dashboard', icon: '🏠', label: 'Dashboard' },
-  { path: '/medicines', icon: '💊', label: 'My Medicines' },
-  { path: '/appointments', icon: '📅', label: 'Appointments' },
-  { path: '/calendar', icon: '🕐', label: 'Calendar' },
-  { path: '/profile', icon: '👤', label: 'Profile' },
+const DRAWER_WIDTH = 260
+
+const mainNavItems = [
+  { path: '/dashboard', icon: <DashboardRoundedIcon />, label: 'Dashboard' },
+  { path: '/medicines', icon: <MedicalServicesRoundedIcon />, label: 'Medications' },
+  { path: '/appointments', icon: <EventNoteRoundedIcon />, label: 'Appointments' },
+  { path: '/calendar', icon: <CalendarMonthRoundedIcon />, label: 'Calendar' },
+  { path: '/profile', icon: <PersonRoundedIcon />, label: 'Profile' },
+]
+
+const bottomNavItems = [
+  { path: '/dashboard', icon: <DashboardRoundedIcon />, label: 'Home' },
+  { path: '/medicines', icon: <MedicalServicesRoundedIcon />, label: 'Meds' },
+  { path: '/appointments', icon: <EventNoteRoundedIcon />, label: 'Appts' },
+  { path: '/profile', icon: <PersonRoundedIcon />, label: 'Profile' },
 ]
 
 function Sidebar() {
   const location = useLocation()
   const navigate = useNavigate()
+  const user = getUser()
 
-  const handleLogout = () => {
-    logout()
-    navigate('/')
-  }
+  const handleLogout = () => { logout(); navigate('/') }
+
+  const initials = user?.fullName
+    ? user.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    : 'U'
+
+  const currentBottomNav = bottomNavItems.findIndex(item => item.path === location.pathname)
 
   return (
     <>
-      <aside className="hidden md:flex flex-col w-64 bg-white shadow-lg min-h-screen p-4 fixed left-0 top-0">
-        <Link to="/" className="text-xl font-heading font-bold text-primary mb-8 px-2">
-          MediRemind 💊
-        </Link>
+      {/* Desktop Sidebar */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: 'none', md: 'block' },
+          '& .MuiDrawer-paper': {
+            width: DRAWER_WIDTH,
+            boxSizing: 'border-box',
+            bgcolor: '#114B4B',
+            color: '#fff',
+            borderRight: 'none',
+            borderRadius: '0 16px 16px 0',
+            py: 2,
+          },
+        }}
+      >
+        {/* Logo */}
+        <Box sx={{ px: 3, py: 2 }}>
+          <Box component={Link} to="/" sx={{ display: 'flex', alignItems: 'center', gap: 1.5, textDecoration: 'none', color: '#fff' }}>
+            <Box sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <LocalHospitalIcon sx={{ fontSize: 22, color: '#fff' }} />
+            </Box>
+            <Box>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2, color: '#fff' }}>MediRemind</Typography>
+              <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Serene Guardian</Typography>
+            </Box>
+          </Box>
+        </Box>
 
-        <nav className="space-y-2">
-          {navItems.map((item) => (
-            <Link
-              key={item.label}
-              to={item.path}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition
-                ${location.pathname === item.path
-                  ? 'bg-primary text-white'
-                  : 'text-darkblue hover:bg-gray-100'
-                }`}
-            >
-              <span className="text-xl">{item.icon}</span>
-              <span className="font-medium">{item.label}</span>
-            </Link>
-          ))}
-        </nav>
+        {/* User section */}
+        <Box sx={{ px: 3, py: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, p: 1.5, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.08)' }}>
+            <Avatar sx={{ bgcolor: '#FDE8D2', color: '#8D5D46', width: 38, height: 38, fontSize: '0.85rem', fontWeight: 700 }}>{initials}</Avatar>
+            <Box>
+              <Typography variant="body2" fontWeight={600} sx={{ color: '#fff', lineHeight: 1.3 }}>{user?.fullName || 'User'}</Typography>
+              <Typography sx={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.7rem' }}>{user?.role === 'caregiver' ? 'Caregiver' : 'Premium Member'}</Typography>
+            </Box>
+          </Box>
+        </Box>
 
-        <div className="mt-auto pt-4">
-          <button
-            onClick={handleLogout}
-            className="flex items-center space-x-3 px-4 py-3 text-danger hover:bg-red-50 rounded-lg transition w-full"
-          >
-            <span className="text-xl">🚪</span>
-            <span className="font-medium">Logout</span>
-          </button>
-        </div>
-      </aside>
+        {/* Nav */}
+        <List sx={{ px: 2, flexGrow: 1, mt: 1 }}>
+          {mainNavItems.map((item) => {
+            const isActive = location.pathname === item.path
+            return (
+              <ListItem key={item.label} disablePadding sx={{ mb: 0.5 }}>
+                <ListItemButton component={Link} to={item.path}
+                  sx={{
+                    borderRadius: 2, py: 1.2, px: 2,
+                    bgcolor: isActive ? 'rgba(255,255,255,0.15)' : 'transparent',
+                    '&:hover': { bgcolor: isActive ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)' },
+                    '& .MuiListItemIcon-root': { color: isActive ? '#fff' : 'rgba(255,255,255,0.6)', minWidth: 40 },
+                  }}>
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.label} primaryTypographyProps={{ fontSize: '0.88rem', fontWeight: isActive ? 600 : 400, color: isActive ? '#fff' : 'rgba(255,255,255,0.7)' }} />
+                </ListItemButton>
+              </ListItem>
+            )
+          })}
+        </List>
 
-      {/* Mobile Bottom Tab Bar — hidden on desktop */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white shadow-[0_-2px_10px_rgba(0,0,0,0.1)] z-50">
-        <div className="flex justify-around items-center py-2">
-          {navItems.map((item) => (
-            <Link
-              key={item.label}
-              to={item.path}
-              className={`flex flex-col items-center py-1 px-2 ${
-                location.pathname === item.path ? 'text-primary' : 'text-gray-400'
-              }`}
-            >
-              <span className="text-xl">{item.icon}</span>
-              <span className="text-[10px]">{item.label}</span>
-            </Link>
-          ))}
-        </div>
-      </nav>
+        {/* Add Medication */}
+        <Box sx={{ px: 2.5, pb: 1 }}>
+          <Button component={Link} to="/medicines" fullWidth variant="contained" startIcon={<AddRoundedIcon />}
+            sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: '#fff', borderRadius: 2, py: 1.3, boxShadow: 'none', '&:hover': { bgcolor: 'rgba(255,255,255,0.25)', boxShadow: 'none' } }}>
+            Add Medication
+          </Button>
+        </Box>
+
+        {/* Logout */}
+        <Box sx={{ px: 2, pb: 1 }}>
+          <ListItemButton onClick={handleLogout} sx={{ borderRadius: 2, py: 1.2, px: 2, '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' } }}>
+            <ListItemIcon sx={{ color: 'rgba(255,255,255,0.5)', minWidth: 40 }}><LogoutRoundedIcon /></ListItemIcon>
+            <ListItemText primary="Logout" primaryTypographyProps={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.6)' }} />
+          </ListItemButton>
+        </Box>
+      </Drawer>
+
+      {/* Mobile Bottom Nav */}
+      <Paper sx={{ display: { xs: 'block', md: 'none' }, position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1200, borderRadius: '12px 12px 0 0' }} elevation={8}>
+        <BottomNavigation value={currentBottomNav >= 0 ? currentBottomNav : false} onChange={(_, v) => navigate(bottomNavItems[v].path)} showLabels
+          sx={{ height: 64, borderRadius: '12px 12px 0 0', '& .MuiBottomNavigationAction-root': { minWidth: 'auto', '&.Mui-selected': { color: '#114B4B' } } }}>
+          {bottomNavItems.map((item) => (<BottomNavigationAction key={item.label} label={item.label} icon={item.icon} />))}
+        </BottomNavigation>
+      </Paper>
     </>
   )
 }
 
+export { DRAWER_WIDTH }
 export default Sidebar

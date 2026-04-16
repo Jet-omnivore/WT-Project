@@ -1,6 +1,23 @@
+// Register.jsx — Fixed borderRadius
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar.jsx'
+import Box from '@mui/material/Box'
+import Card from '@mui/material/Card'
+import CardContent from '@mui/material/CardContent'
+import Typography from '@mui/material/Typography'
+import TextField from '@mui/material/TextField'
+import Button from '@mui/material/Button'
+import Alert from '@mui/material/Alert'
+import Checkbox from '@mui/material/Checkbox'
+import FormControlLabel from '@mui/material/FormControlLabel'
+import CircularProgress from '@mui/material/CircularProgress'
+import InputAdornment from '@mui/material/InputAdornment'
+import PersonRoundedIcon from '@mui/icons-material/PersonRounded'
+import EmailRoundedIcon from '@mui/icons-material/EmailRounded'
+import LockRoundedIcon from '@mui/icons-material/LockRounded'
+import LocalHospitalRoundedIcon from '@mui/icons-material/LocalHospitalRounded'
+import VolunteerActivismRoundedIcon from '@mui/icons-material/VolunteerActivismRounded'
 import { authAPI, saveAuth } from '../api.js'
 
 function Register() {
@@ -16,163 +33,88 @@ function Register() {
   const [loading, setLoading] = useState(false)
 
   const validate = () => {
-    const newErrors = {}
-    if (!fullName.trim()) newErrors.fullName = 'Full name is required'
-    if (!email.includes('@')) newErrors.email = 'Email must contain @ symbol'
-    if (password.length < 6) newErrors.password = 'Password must be at least 6 characters'
-    if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match'
-    if (!role) newErrors.role = 'Please select a role'
-    if (!termsAccepted) newErrors.terms = 'You must accept the terms'
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    const e = {}
+    if (!fullName.trim()) e.fullName = 'Required'
+    if (!email.includes('@')) e.email = 'Invalid email'
+    if (password.length < 6) e.password = 'Min 6 chars'
+    if (password !== confirmPassword) e.confirmPassword = 'Mismatch'
+    if (!role) e.role = 'Select a role'
+    if (!termsAccepted) e.terms = 'Accept terms'
+    setErrors(e); return Object.keys(e).length === 0
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!validate()) return
-
-    setLoading(true)
-    setServerError('')
-
+    e.preventDefault(); if (!validate()) return
+    setLoading(true); setServerError('')
     try {
       const data = await authAPI.register({ fullName, email, password, role })
-      saveAuth(data.token, data.user)
-      navigate('/dashboard')
-    } catch (error) {
-      setServerError(error.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const borderStyle = (field, value) => {
-    if (errors[field]) return 'border-danger'
-    if (value) return 'border-success'
-    return 'border-gray-200'
+      saveAuth(data.token, data.user); navigate('/dashboard')
+    } catch (e) { setServerError(e.message) } finally { setLoading(false) }
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <Box sx={{ minHeight: '100vh', bgcolor: '#E4F2F2' }}>
       <Navbar />
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', px: 2, py: { xs: 4, md: 8 } }}>
+        <Card sx={{ width: '100%', maxWidth: 500, boxShadow: '0 8px 40px rgba(17,75,75,0.08)', border: 'none' }}>
+          <CardContent sx={{ p: { xs: 3, md: 4.5 } }}>
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
+              <Typography variant="h4" fontWeight={700} sx={{ color: '#114B4B', mb: 1 }}>Create Account</Typography>
+              <Typography variant="body2" sx={{ color: '#5A7A7A' }}>Join your serene health guardian</Typography>
+            </Box>
+            {serverError && <Alert severity="error" sx={{ mb: 3 }}>{serverError}</Alert>}
+            <Box component="form" onSubmit={handleSubmit}>
+              <TextField fullWidth label="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} error={!!errors.fullName} helperText={errors.fullName} sx={{ mb: 2 }}
+                InputProps={{ startAdornment: <InputAdornment position="start"><PersonRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> }} />
+              <TextField fullWidth label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} error={!!errors.email} helperText={errors.email} sx={{ mb: 2 }}
+                InputProps={{ startAdornment: <InputAdornment position="start"><EmailRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> }} />
+              <TextField fullWidth label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} error={!!errors.password} helperText={errors.password} sx={{ mb: 2 }}
+                InputProps={{ startAdornment: <InputAdornment position="start"><LockRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> }} />
+              <TextField fullWidth label="Confirm Password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} error={!!errors.confirmPassword} helperText={errors.confirmPassword} sx={{ mb: 3 }}
+                InputProps={{ startAdornment: <InputAdornment position="start"><LockRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> }} />
 
-      <div className="flex items-center justify-center px-4 py-12">
-        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-lg">
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-heading font-bold text-darkblue">Create Your Account 🚀</h1>
-            <p className="text-gray-500 mt-2">Join MediRemind to manage your health better</p>
-          </div>
+              <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600, color: '#114B4B' }}>I am a...</Typography>
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
+                {[
+                  { val: 'patient', icon: <LocalHospitalRoundedIcon />, label: 'Patient' },
+                  { val: 'caregiver', icon: <VolunteerActivismRoundedIcon />, label: 'Caregiver' },
+                ].map(r => (
+                  <Card key={r.val} onClick={() => setRole(r.val)}
+                    sx={{
+                      cursor: 'pointer', textAlign: 'center', py: 2.5,
+                      border: 2, borderColor: role === r.val ? '#114B4B' : 'rgba(17,75,75,0.1)',
+                      bgcolor: role === r.val ? 'rgba(17,75,75,0.04)' : 'transparent',
+                      boxShadow: 'none', '&:hover': { borderColor: '#114B4B', transform: 'none', boxShadow: 'none' },
+                    }}>
+                    <CardContent sx={{ p: '0 !important' }}>
+                      <Box sx={{ color: role === r.val ? '#114B4B' : '#5A7A7A', mb: 0.5 }}>{r.icon}</Box>
+                      <Typography variant="body2" fontWeight={600} sx={{ color: role === r.val ? '#114B4B' : '#5A7A7A' }}>{r.label}</Typography>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
+              {errors.role && <Typography variant="caption" color="error" sx={{ mb: 1, display: 'block' }}>{errors.role}</Typography>}
 
-          {serverError && (
-            <div className="bg-red-50 border border-danger text-danger text-sm px-4 py-3 rounded-lg mb-4">
-              {serverError}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-darkblue mb-1">Full Name</label>
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Enter your full name"
-                className={`w-full px-4 py-3 rounded-lg border-2 outline-none transition focus:border-primary ${borderStyle('fullName', fullName)}`}
+              <FormControlLabel
+                control={<Checkbox checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} size="small" sx={{ color: '#114B4B', '&.Mui-checked': { color: '#114B4B' } }} />}
+                label={<Typography variant="body2" sx={{ color: '#5A7A7A' }}>I agree to the <Typography component="span" variant="body2" sx={{ color: '#114B4B', fontWeight: 600 }}>Terms</Typography> and <Typography component="span" variant="body2" sx={{ color: '#114B4B', fontWeight: 600 }}>Privacy Policy</Typography></Typography>}
+                sx={{ mb: 1 }}
               />
-              {errors.fullName && <p className="text-danger text-xs mt-1">{errors.fullName}</p>}
-            </div>
+              {errors.terms && <Typography variant="caption" color="error" sx={{ mb: 2, display: 'block' }}>{errors.terms}</Typography>}
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-darkblue mb-1">Email Address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className={`w-full px-4 py-3 rounded-lg border-2 outline-none transition focus:border-primary ${borderStyle('email', email.includes('@') ? email : '')}`}
-              />
-              {errors.email && <p className="text-danger text-xs mt-1">{errors.email}</p>}
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-darkblue mb-1">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 6 characters"
-                className={`w-full px-4 py-3 rounded-lg border-2 outline-none transition focus:border-primary ${borderStyle('password', password.length >= 6 ? password : '')}`}
-              />
-              {errors.password && <p className="text-danger text-xs mt-1">{errors.password}</p>}
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-darkblue mb-1">Confirm Password</label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Re-enter your password"
-                className={`w-full px-4 py-3 rounded-lg border-2 outline-none transition focus:border-primary ${borderStyle('confirmPassword', confirmPassword && password === confirmPassword ? confirmPassword : '')}`}
-              />
-              {errors.confirmPassword && <p className="text-danger text-xs mt-1">{errors.confirmPassword}</p>}
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-darkblue mb-2">I am a...</label>
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  type="button"
-                  onClick={() => setRole('patient')}
-                  className={`p-4 rounded-xl border-2 text-center transition
-                    ${role === 'patient' ? 'border-primary bg-primary/10 text-primary' : 'border-gray-200 text-gray-500 hover:border-primary/50'}`}
-                >
-                  <div className="text-3xl mb-2">🏥</div>
-                  <p className="font-semibold">Patient</p>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole('caregiver')}
-                  className={`p-4 rounded-xl border-2 text-center transition
-                    ${role === 'caregiver' ? 'border-primary bg-primary/10 text-primary' : 'border-gray-200 text-gray-500 hover:border-primary/50'}`}
-                >
-                  <div className="text-3xl mb-2">👨‍⚕️</div>
-                  <p className="font-semibold">Caregiver</p>
-                </button>
-              </div>
-              {errors.role && <p className="text-danger text-xs mt-1">{errors.role}</p>}
-            </div>
-
-            <div className="mb-6 flex items-start gap-2">
-              <input
-                type="checkbox"
-                checked={termsAccepted}
-                onChange={(e) => setTermsAccepted(e.target.checked)}
-                className="mt-1 w-4 h-4 accent-primary"
-              />
-              <label className="text-sm text-gray-600">
-                I agree to the <span className="text-primary cursor-pointer hover:underline">Terms & Conditions</span> and <span className="text-primary cursor-pointer hover:underline">Privacy Policy</span>
-              </label>
-            </div>
-            {errors.terms && <p className="text-danger text-xs mb-4 -mt-4">{errors.terms}</p>}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-primary text-white font-semibold rounded-lg hover:bg-secondary transition shadow-md disabled:opacity-50"
-            >
-              {loading ? 'Creating Account...' : 'Create Account'}
-            </button>
-          </form>
-
-          <p className="text-center text-sm text-gray-500 mt-6">
-            Already have an account?{' '}
-            <Link to="/login" className="text-primary font-semibold hover:underline">
-              Login
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
+              <Button type="submit" variant="contained" fullWidth size="large" disabled={loading}
+                sx={{ py: 1.5, mt: 1, mb: 3, bgcolor: '#114B4B', '&:hover': { bgcolor: '#0C3636' } }}>
+                {loading ? <CircularProgress size={24} color="inherit" /> : 'Create Account'}
+              </Button>
+            </Box>
+            <Typography variant="body2" sx={{ color: '#5A7A7A' }} textAlign="center">
+              Already have an account?{' '}
+              <Typography component={Link} to="/login" variant="body2" sx={{ color: '#114B4B', fontWeight: 600, textDecoration: 'none' }}>Login</Typography>
+            </Typography>
+          </CardContent>
+        </Card>
+      </Box>
+    </Box>
   )
 }
 

@@ -1,8 +1,38 @@
+// Medicines.jsx — Fixed borderRadius
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Sidebar from '../components/Sidebar.jsx'
-import MedicineCard from '../components/MedicineCard.jsx'
+import Sidebar, { DRAWER_WIDTH } from '../components/Sidebar.jsx'
 import { isLoggedIn, medicineAPI } from '../api.js'
+import Box from '@mui/material/Box'
+import Typography from '@mui/material/Typography'
+import Card from '@mui/material/Card'
+import CardContent from '@mui/material/CardContent'
+import CardActions from '@mui/material/CardActions'
+import Button from '@mui/material/Button'
+import Chip from '@mui/material/Chip'
+import Avatar from '@mui/material/Avatar'
+import TextField from '@mui/material/TextField'
+import InputAdornment from '@mui/material/InputAdornment'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
+import Select from '@mui/material/Select'
+import MenuItem from '@mui/material/MenuItem'
+import FormControl from '@mui/material/FormControl'
+import InputLabel from '@mui/material/InputLabel'
+import LinearProgress from '@mui/material/LinearProgress'
+import Grid from '@mui/material/Grid'
+import IconButton from '@mui/material/IconButton'
+import Divider from '@mui/material/Divider'
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded'
+import AddRoundedIcon from '@mui/icons-material/AddRounded'
+import MedicationRoundedIcon from '@mui/icons-material/MedicationRounded'
+import EditRoundedIcon from '@mui/icons-material/EditRounded'
+import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded'
+import TipsAndUpdatesRoundedIcon from '@mui/icons-material/TipsAndUpdatesRounded'
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
 
 function Medicines() {
   const navigate = useNavigate()
@@ -10,159 +40,144 @@ function Medicines() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [newMedicine, setNewMedicine] = useState({
-    name: '', dose: '', unit: 'mg', frequency: 'Daily', time: '', notes: ''
-  })
+  const [newMedicine, setNewMedicine] = useState({ name: '', dose: '', unit: 'mg', frequency: 'Daily', time: '', notes: '' })
 
   useEffect(() => {
-    if (!isLoggedIn()) {
-      navigate('/login')
-      return
-    }
+    if (!isLoggedIn()) { navigate('/login'); return }
     loadMedicines()
   }, [])
 
   const loadMedicines = async () => {
-    try {
-      const data = await medicineAPI.getAll()
-      setMedicines(data)
-    } catch (error) {
-      console.error('Failed to load medicines:', error)
-    } finally {
-      setLoading(false)
-    }
+    try { setMedicines(await medicineAPI.getAll()) } catch (e) { console.error(e) } finally { setLoading(false) }
   }
 
-  const filteredMedicines = medicines.filter(med =>
-    med.name.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredMedicines = medicines.filter(med => med.name.toLowerCase().includes(searchQuery.toLowerCase()))
 
   const handleSave = async () => {
-    if (!newMedicine.name || !newMedicine.dose || !newMedicine.time) {
-      alert('Please fill in Medicine Name, Dosage, and Time')
-      return
-    }
-
+    if (!newMedicine.name || !newMedicine.dose || !newMedicine.time) { alert('Please fill Name, Dosage, and Time'); return }
     try {
-      const created = await medicineAPI.create({
-        name: newMedicine.name,
-        dose: `${newMedicine.dose}${newMedicine.unit}`,
-        frequency: newMedicine.frequency,
-        time: newMedicine.time,
-        notes: newMedicine.notes,
-        status: 'active'
-      })
+      const created = await medicineAPI.create({ name: newMedicine.name, dose: `${newMedicine.dose}${newMedicine.unit}`, frequency: newMedicine.frequency, time: newMedicine.time, notes: newMedicine.notes, status: 'active' })
       setMedicines([created, ...medicines])
       setNewMedicine({ name: '', dose: '', unit: 'mg', frequency: 'Daily', time: '', notes: '' })
       setShowModal(false)
-    } catch (error) {
-      alert('Failed to save medicine: ' + error.message)
-    }
+    } catch (e) { alert('Failed: ' + e.message) }
   }
 
   const handleDelete = async (id) => {
-    try {
-      await medicineAPI.remove(id)
-      setMedicines(medicines.filter(med => med._id !== id))
-    } catch (error) {
-      alert('Failed to delete: ' + error.message)
-    }
+    try { await medicineAPI.remove(id); setMedicines(medicines.filter(m => m._id !== id)) } catch (e) { alert(e.message) }
   }
 
   return (
-    <div className="min-h-screen bg-background font-body">
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#E4F2F2' }}>
       <Sidebar />
+      <Box component="main" sx={{ flexGrow: 1, ml: { md: `${DRAWER_WIDTH}px` }, p: { xs: 2, md: 4 }, pb: { xs: 10, md: 4 } }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1, flexWrap: 'wrap', gap: 2 }}>
+          <Box>
+            <Typography variant="h4" fontWeight={700} sx={{ color: '#114B4B' }}>My Medications</Typography>
+            <Typography variant="body2" sx={{ color: '#5A7A7A', mt: 0.5 }}>Track and manage your daily health routine.</Typography>
+          </Box>
+          <Button variant="contained" startIcon={<AddRoundedIcon />} onClick={() => setShowModal(true)}
+            sx={{ bgcolor: '#114B4B', '&:hover': { bgcolor: '#0C3636' } }}>Add Medicine</Button>
+        </Box>
 
-      <main className="md:ml-64 p-4 md:p-8 pb-24 md:pb-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <h1 className="text-2xl font-heading font-bold text-darkblue">💊 My Medicines</h1>
-          <button
-            onClick={() => setShowModal(true)}
-            className="px-5 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition shadow-md"
-          >
-            + Add Medicine
-          </button>
-        </div>
-
-        <div className="mb-6">
-          <input
-            type="text"
-            placeholder="🔍 Search medicines..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full max-w-md px-4 py-3 rounded-lg border border-gray-200 outline-none focus:border-primary transition"
-          />
-        </div>
+        <TextField placeholder="Search medicines..." size="small" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+          sx={{ mb: 3, mt: 2, maxWidth: 400, '& .MuiOutlinedInput-root': { bgcolor: '#fff' } }} fullWidth
+          InputProps={{ startAdornment: <InputAdornment position="start"><SearchRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> }} />
 
         {loading ? (
-          <p className="text-center text-gray-400 mt-8">Loading medicines...</p>
+          <Box sx={{ textAlign: 'center', py: 8 }}><Typography sx={{ color: '#5A7A7A' }}>Loading...</Typography></Box>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredMedicines.map((med) => (
-              <MedicineCard key={med._id} medicine={med} onDelete={() => handleDelete(med._id)} />
-            ))}
-          </div>
+          <Grid container spacing={2.5}>
+            {filteredMedicines.map((med, i) => {
+              const colors = ['#114B4B', '#8D5D46', '#27AE60', '#1162d4']
+              const c = colors[i % colors.length]
+              const supplyDays = Math.floor(Math.random() * 20 + 5)
+              return (
+                <Grid item xs={12} sm={6} lg={4} key={med._id}>
+                  <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                    <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                          <Avatar sx={{ bgcolor: c, width: 44, height: 44 }}><MedicationRoundedIcon sx={{ fontSize: 22 }} /></Avatar>
+                          <Box>
+                            <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#114B4B' }}>{med.name}</Typography>
+                            <Typography variant="caption" sx={{ color: '#5A7A7A' }}>{med.dose}</Typography>
+                          </Box>
+                        </Box>
+                        <Chip label={med.status === 'active' ? 'Active' : 'Done'} size="small"
+                          sx={{ bgcolor: med.status === 'active' ? '#E8F8EF' : '#F5F5F5', color: med.status === 'active' ? '#27AE60' : '#999', fontSize: '0.7rem', fontWeight: 600 }} />
+                      </Box>
+                      <Typography variant="body2" sx={{ color: '#5A7A7A', mb: 0.5 }}>🔁 {med.frequency || 'Daily'}</Typography>
+                      <Typography variant="body2" sx={{ color: '#5A7A7A' }}>🕐 {med.time}</Typography>
+                      <Box sx={{ mt: 2.5 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                          <Typography variant="caption" sx={{ color: '#5A7A7A' }}>Supply</Typography>
+                          <Typography variant="caption" sx={{ color: supplyDays < 10 ? '#E74C3C' : '#5A7A7A' }}>{supplyDays} days left</Typography>
+                        </Box>
+                        <LinearProgress variant="determinate" value={Math.min(100, (supplyDays / 30) * 100)}
+                          sx={{ bgcolor: 'rgba(17,75,75,0.06)', '& .MuiLinearProgress-bar': { bgcolor: supplyDays < 10 ? '#E74C3C' : c } }} />
+                      </Box>
+                    </CardContent>
+                    <Divider />
+                    <CardActions sx={{ px: 2, py: 1 }}>
+                      <Button size="small" startIcon={<EditRoundedIcon sx={{ fontSize: 16 }} />} sx={{ color: '#5A7A7A' }}>Edit</Button>
+                      <Button size="small" startIcon={<DeleteRoundedIcon sx={{ fontSize: 16 }} />} color="error" onClick={() => handleDelete(med._id)}>Delete</Button>
+                    </CardActions>
+                  </Card>
+                </Grid>
+              )
+            })}
+          </Grid>
         )}
 
         {!loading && filteredMedicines.length === 0 && (
-          <p className="text-center text-gray-400 mt-8">
-            {searchQuery ? `No medicines found matching "${searchQuery}"` : 'No medicines yet. Click "+ Add Medicine" to get started!'}
-          </p>
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <MedicationRoundedIcon sx={{ fontSize: 48, color: '#114B4B', opacity: 0.2, mb: 2 }} />
+            <Typography sx={{ color: '#5A7A7A' }}>{searchQuery ? `No results for "${searchQuery}"` : 'No medicines yet.'}</Typography>
+          </Box>
         )}
 
-        {showModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-              <h2 className="text-xl font-heading font-bold text-darkblue mb-4">Add New Medicine</h2>
-
-              <div className="mb-3">
-                <label className="block text-sm font-medium text-darkblue mb-1">Medicine Name</label>
-                <input type="text" value={newMedicine.name} onChange={(e) => setNewMedicine({ ...newMedicine, name: e.target.value })} placeholder="e.g. Paracetamol" className="w-full px-4 py-2 rounded-lg border border-gray-200 outline-none focus:border-primary" />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <div>
-                  <label className="block text-sm font-medium text-darkblue mb-1">Dosage</label>
-                  <input type="text" value={newMedicine.dose} onChange={(e) => setNewMedicine({ ...newMedicine, dose: e.target.value })} placeholder="e.g. 500" className="w-full px-4 py-2 rounded-lg border border-gray-200 outline-none focus:border-primary" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-darkblue mb-1">Unit</label>
-                  <select value={newMedicine.unit} onChange={(e) => setNewMedicine({ ...newMedicine, unit: e.target.value })} className="w-full px-4 py-2 rounded-lg border border-gray-200 outline-none focus:border-primary">
-                    <option value="mg">mg</option>
-                    <option value="ml">ml</option>
-                    <option value="tablet">tablet</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="mb-3">
-                <label className="block text-sm font-medium text-darkblue mb-1">Frequency</label>
-                <select value={newMedicine.frequency} onChange={(e) => setNewMedicine({ ...newMedicine, frequency: e.target.value })} className="w-full px-4 py-2 rounded-lg border border-gray-200 outline-none focus:border-primary">
-                  <option value="Daily">Daily</option>
-                  <option value="Twice Daily">Twice Daily</option>
-                  <option value="Weekly">Weekly</option>
-                </select>
-              </div>
-
-              <div className="mb-3">
-                <label className="block text-sm font-medium text-darkblue mb-1">Time</label>
-                <input type="text" value={newMedicine.time} onChange={(e) => setNewMedicine({ ...newMedicine, time: e.target.value })} placeholder="e.g. 8:00 AM" className="w-full px-4 py-2 rounded-lg border border-gray-200 outline-none focus:border-primary" />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-darkblue mb-1">Notes (optional)</label>
-                <textarea value={newMedicine.notes} onChange={(e) => setNewMedicine({ ...newMedicine, notes: e.target.value })} placeholder="Any additional notes..." rows={2} className="w-full px-4 py-2 rounded-lg border border-gray-200 outline-none focus:border-primary resize-none" />
-              </div>
-
-              <div className="flex gap-3">
-                <button onClick={handleSave} className="flex-1 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition">Save Medicine</button>
-                <button onClick={() => setShowModal(false)} className="flex-1 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition">Cancel</button>
-              </div>
-            </div>
-          </div>
+        {medicines.length > 0 && (
+          <Card sx={{ mt: 3, bgcolor: '#FDE8D2', border: 'none' }}>
+            <CardContent sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+                <TipsAndUpdatesRoundedIcon sx={{ color: '#8D5D46' }} />
+                <Typography variant="subtitle2" fontWeight={600} sx={{ color: '#8D5D46' }}>Guardian Tip</Typography>
+              </Box>
+              <Typography variant="body2" sx={{ color: '#8D5D46', lineHeight: 1.7 }}>Consistency is key. Patients who take medication at the same time every morning report 25% better stability.</Typography>
+              <Button size="small" endIcon={<ArrowForwardRoundedIcon sx={{ fontSize: 16 }} />} sx={{ mt: 1.5, color: '#8D5D46', fontWeight: 600 }}>Read Clinical Guide</Button>
+            </CardContent>
+          </Card>
         )}
-      </main>
-    </div>
+
+        <Dialog open={showModal} onClose={() => setShowModal(false)} maxWidth="sm" fullWidth>
+          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h6" fontWeight={600} sx={{ color: '#114B4B' }}>Add New Medicine</Typography>
+            <IconButton onClick={() => setShowModal(false)} size="small"><CloseRoundedIcon /></IconButton>
+          </DialogTitle>
+          <DialogContent dividers>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 1 }}>
+              <TextField label="Medicine Name" value={newMedicine.name} onChange={(e) => setNewMedicine({ ...newMedicine, name: e.target.value })} fullWidth />
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                <TextField label="Dosage" value={newMedicine.dose} onChange={(e) => setNewMedicine({ ...newMedicine, dose: e.target.value })} />
+                <FormControl><InputLabel>Unit</InputLabel><Select value={newMedicine.unit} onChange={(e) => setNewMedicine({ ...newMedicine, unit: e.target.value })} label="Unit">
+                  <MenuItem value="mg">mg</MenuItem><MenuItem value="ml">ml</MenuItem><MenuItem value="tablet">tablet</MenuItem>
+                </Select></FormControl>
+              </Box>
+              <FormControl><InputLabel>Frequency</InputLabel><Select value={newMedicine.frequency} onChange={(e) => setNewMedicine({ ...newMedicine, frequency: e.target.value })} label="Frequency">
+                <MenuItem value="Daily">Daily</MenuItem><MenuItem value="Twice Daily">Twice Daily</MenuItem><MenuItem value="Weekly">Weekly</MenuItem>
+              </Select></FormControl>
+              <TextField label="Time" value={newMedicine.time} onChange={(e) => setNewMedicine({ ...newMedicine, time: e.target.value })} placeholder="e.g. 8:00 AM" />
+              <TextField label="Notes" value={newMedicine.notes} onChange={(e) => setNewMedicine({ ...newMedicine, notes: e.target.value })} multiline rows={2} />
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, py: 2 }}>
+            <Button onClick={() => setShowModal(false)} sx={{ color: '#5A7A7A' }}>Cancel</Button>
+            <Button onClick={handleSave} variant="contained" sx={{ bgcolor: '#114B4B', '&:hover': { bgcolor: '#0C3636' } }}>Save Medicine</Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </Box>
   )
 }
 

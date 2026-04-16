@@ -1,6 +1,21 @@
+// Login.jsx — Fixed borderRadius
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar.jsx'
+import Box from '@mui/material/Box'
+import Card from '@mui/material/Card'
+import CardContent from '@mui/material/CardContent'
+import Typography from '@mui/material/Typography'
+import TextField from '@mui/material/TextField'
+import Button from '@mui/material/Button'
+import Alert from '@mui/material/Alert'
+import InputAdornment from '@mui/material/InputAdornment'
+import IconButton from '@mui/material/IconButton'
+import CircularProgress from '@mui/material/CircularProgress'
+import EmailRoundedIcon from '@mui/icons-material/EmailRounded'
+import LockRoundedIcon from '@mui/icons-material/LockRounded'
+import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded'
+import VisibilityOffRoundedIcon from '@mui/icons-material/VisibilityOffRounded'
 import { authAPI, saveAuth } from '../api.js'
 
 function Login() {
@@ -12,123 +27,52 @@ function Login() {
   const [passwordError, setPasswordError] = useState('')
   const [serverError, setServerError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [emailTouched, setEmailTouched] = useState(false)
-  const [passwordTouched, setPasswordTouched] = useState(false)
-
-  const validateEmail = (value) => {
-    setEmail(value)
-    setEmailTouched(true)
-    if (!value.includes('@')) {
-      setEmailError('Email must contain @ symbol')
-    } else {
-      setEmailError('')
-    }
-  }
-
-  const validatePassword = (value) => {
-    setPassword(value)
-    setPasswordTouched(true)
-    if (value.length < 6) {
-      setPasswordError('Password must be at least 6 characters')
-    } else {
-      setPasswordError('')
-    }
-  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    validateEmail(email)
-    validatePassword(password)
-
-    if (!email.includes('@') || password.length < 6) return
-
-    setLoading(true)
-    setServerError('')
-
+    let valid = true
+    if (!email.includes('@')) { setEmailError('Invalid email'); valid = false } else setEmailError('')
+    if (password.length < 6) { setPasswordError('Min 6 characters'); valid = false } else setPasswordError('')
+    if (!valid) return
+    setLoading(true); setServerError('')
     try {
       const data = await authAPI.login({ email, password })
-      saveAuth(data.token, data.user)
-      navigate('/dashboard')
-    } catch (error) {
-      setServerError(error.message)
-    } finally {
-      setLoading(false)
-    }
+      saveAuth(data.token, data.user); navigate('/dashboard')
+    } catch (e) { setServerError(e.message) } finally { setLoading(false) }
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <Box sx={{ minHeight: '100vh', bgcolor: '#E4F2F2' }}>
       <Navbar />
-
-      <div className="flex items-center justify-center px-4 py-16">
-        <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-heading font-bold text-darkblue">Welcome Back 👋</h1>
-            <p className="text-gray-500 mt-2">Login to your MediRemind account</p>
-          </div>
-
-          {serverError && (
-            <div className="bg-red-50 border border-danger text-danger text-sm px-4 py-3 rounded-lg mb-4">
-              {serverError}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-darkblue mb-1">Email Address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => validateEmail(e.target.value)}
-                placeholder="you@example.com"
-                className={`w-full px-4 py-3 rounded-lg border-2 outline-none transition
-                  ${emailError ? 'border-danger' : emailTouched && !emailError ? 'border-success' : 'border-gray-200'}
-                  focus:border-primary`}
-              />
-              {emailError && <p className="text-danger text-xs mt-1">{emailError}</p>}
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-darkblue mb-1">Password</label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => validatePassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className={`w-full px-4 py-3 rounded-lg border-2 outline-none transition
-                    ${passwordError ? 'border-danger' : passwordTouched && !passwordError ? 'border-success' : 'border-gray-200'}
-                    focus:border-primary`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-darkblue"
-                >
-                  {showPassword ? '🙈' : '👁️'}
-                </button>
-              </div>
-              {passwordError && <p className="text-danger text-xs mt-1">{passwordError}</p>}
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-primary text-white font-semibold rounded-lg hover:bg-secondary transition shadow-md disabled:opacity-50"
-            >
-              {loading ? 'Logging in...' : 'Login'}
-            </button>
-          </form>
-
-          <p className="text-center text-sm text-gray-500 mt-6">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-primary font-semibold hover:underline">
-              Sign Up
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', px: 2, py: { xs: 6, md: 10 } }}>
+        <Card sx={{ width: '100%', maxWidth: 440, boxShadow: '0 8px 40px rgba(17,75,75,0.08)', border: 'none' }}>
+          <CardContent sx={{ p: { xs: 3, md: 4.5 } }}>
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
+              <Typography variant="h4" fontWeight={700} sx={{ color: '#114B4B', mb: 1 }}>Welcome Back</Typography>
+              <Typography variant="body2" sx={{ color: '#5A7A7A' }}>Login to your MediRemind account</Typography>
+            </Box>
+            {serverError && <Alert severity="error" sx={{ mb: 3 }}>{serverError}</Alert>}
+            <Box component="form" onSubmit={handleSubmit}>
+              <TextField fullWidth label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} error={!!emailError} helperText={emailError} sx={{ mb: 2.5 }}
+                InputProps={{ startAdornment: <InputAdornment position="start"><EmailRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> }} />
+              <TextField fullWidth label="Password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} error={!!passwordError} helperText={passwordError} sx={{ mb: 3.5 }}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start"><LockRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment>,
+                  endAdornment: <InputAdornment position="end"><IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small">{showPassword ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}</IconButton></InputAdornment>,
+                }} />
+              <Button type="submit" variant="contained" fullWidth size="large" disabled={loading}
+                sx={{ py: 1.5, mb: 3, bgcolor: '#114B4B', '&:hover': { bgcolor: '#0C3636' } }}>
+                {loading ? <CircularProgress size={24} color="inherit" /> : 'Login'}
+              </Button>
+            </Box>
+            <Typography variant="body2" sx={{ color: '#5A7A7A' }} textAlign="center">
+              Don't have an account?{' '}
+              <Typography component={Link} to="/register" variant="body2" sx={{ color: '#114B4B', fontWeight: 600, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>Sign Up</Typography>
+            </Typography>
+          </CardContent>
+        </Card>
+      </Box>
+    </Box>
   )
 }
 
