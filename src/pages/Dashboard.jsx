@@ -22,18 +22,41 @@ import TipsAndUpdatesRoundedIcon from '@mui/icons-material/TipsAndUpdatesRounded
 import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded'
 import LocalFireDepartmentRoundedIcon from '@mui/icons-material/LocalFireDepartmentRounded'
 
+// Helper to get today's date string for localStorage scoping
+const getTodayKey = (suffix) => {
+  const today = new Date().toISOString().slice(0, 10) // e.g. "2026-04-17"
+  const user = getUser()
+  return `dashboard_${suffix}_${user?.id || 'guest'}_${today}`
+}
+
+const loadPersistedIds = (suffix) => {
+  try {
+    const data = localStorage.getItem(getTodayKey(suffix))
+    return data ? JSON.parse(data) : []
+  } catch { return [] }
+}
+
 function Dashboard() {
   const navigate = useNavigate()
   const user = getUser()
   const [medicines, setMedicines] = useState([])
   const [appointments, setAppointments] = useState([])
-  const [takenIds, setTakenIds] = useState([])
-  const [skippedIds, setSkippedIds] = useState([])
+  const [takenIds, setTakenIds] = useState(() => loadPersistedIds('taken'))
+  const [skippedIds, setSkippedIds] = useState(() => loadPersistedIds('skipped'))
 
   useEffect(() => {
     if (!isLoggedIn()) { navigate('/login'); return }
     loadData()
   }, [])
+
+  // Persist taken/skipped IDs to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(getTodayKey('taken'), JSON.stringify(takenIds))
+  }, [takenIds])
+
+  useEffect(() => {
+    localStorage.setItem(getTodayKey('skipped'), JSON.stringify(skippedIds))
+  }, [skippedIds])
 
   const loadData = async () => {
     try {
