@@ -34,13 +34,26 @@ import TipsAndUpdatesRoundedIcon from '@mui/icons-material/TipsAndUpdatesRounded
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
 
+// Deterministic hash to generate a stable supply number from a medicine ID
+function stableSupplyDays(id) {
+  let hash = 0
+  const str = String(id)
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i)
+    hash |= 0
+  }
+  return Math.abs(hash % 26) + 5  // range: 5–30 days
+}
+
 function Medicines() {
   const navigate = useNavigate()
   const [medicines, setMedicines] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [newMedicine, setNewMedicine] = useState({ name: '', dose: '', unit: 'mg', frequency: 'Daily', time: '', notes: '' })
+  const [editingMedicine, setEditingMedicine] = useState(null)
+  const emptyForm = { name: '', dose: '', unit: 'mg', frequency: 'Daily', time: '', notes: '' }
+  const [formData, setFormData] = useState(emptyForm)
 
   useEffect(() => {
     if (!isLoggedIn()) { navigate('/login'); return }
@@ -53,13 +66,54 @@ function Medicines() {
 
   const filteredMedicines = medicines.filter(med => med.name.toLowerCase().includes(searchQuery.toLowerCase()))
 
+  const openAddDialog = () => {
+    setEditingMedicine(null)
+    setFormData(emptyForm)
+    setShowModal(true)
+  }
+
+  const openEditDialog = (med) => {
+    setEditingMedicine(med)
+    // Parse dose value and unit from stored string like "500mg"
+    const doseMatch = med.dose ? med.dose.match(/^([\d.]+)\s*(.*)$/) : null
+    const doseVal = doseMatch ? doseMatch[1] : med.dose || ''
+    const unitVal = doseMatch && doseMatch[2] ? doseMatch[2] : 'mg'
+    setFormData({
+      name: med.name || '',
+      dose: doseVal,
+      unit: ['mg', 'ml', 'tablet'].includes(unitVal) ? unitVal : 'mg',
+      frequency: med.frequency || 'Daily',
+      time: med.time || '',
+      notes: med.notes || '',
+    })
+    setShowModal(true)
+  }
+
+  const closeDialog = () => {
+    setShowModal(false)
+    setEditingMedicine(null)
+    setFormData(emptyForm)
+  }
+
   const handleSave = async () => {
-    if (!newMedicine.name || !newMedicine.dose || !newMedicine.time) { alert('Please fill Name, Dosage, and Time'); return }
+    if (!formData.name || !formData.dose || !formData.time) { alert('Please fill Name, Dosage, and Time'); return }
+    const payload = {
+      name: formData.name,
+      dose: `${formData.dose}${formData.unit}`,
+      frequency: formData.frequency,
+      time: formData.time,
+      notes: formData.notes,
+      status: editingMedicine ? editingMedicine.status : 'active',
+    }
     try {
-      const created = await medicineAPI.create({ name: newMedicine.name, dose: `${newMedicine.dose}${newMedicine.unit}`, frequency: newMedicine.frequency, time: newMedicine.time, notes: newMedicine.notes, status: 'active' })
-      setMedicines([created, ...medicines])
-      setNewMedicine({ name: '', dose: '', unit: 'mg', frequency: 'Daily', time: '', notes: '' })
-      setShowModal(false)
+      if (editingMedicine) {
+        const updated = await medicineAPI.update(editingMedicine._id, payload)
+        setMedicines(medicines.map(m => m._id === editingMedicine._id ? updated : m))
+      } else {
+        const created = await medicineAPI.create(payload)
+        setMedicines([created, ...medicines])
+      }
+      closeDialog()
     } catch (e) { alert('Failed: ' + e.message) }
   }
 
@@ -76,13 +130,13 @@ function Medicines() {
             <Typography variant="h4" fontWeight={700} sx={{ color: '#114B4B' }}>My Medications</Typography>
             <Typography variant="body2" sx={{ color: '#5A7A7A', mt: 0.5 }}>Track and manage your daily health routine.</Typography>
           </Box>
-          <Button variant="contained" startIcon={<AddRoundedIcon />} onClick={() => setShowModal(true)}
+          <Button variant="contained" startIcon={<AddRoundedIcon />} onClick={openAddDialog}
             sx={{ bgcolor: '#114B4B', '&:hover': { bgcolor: '#0C3636' } }}>Add Medicine</Button>
         </Box>
 
         <TextField placeholder="Search medicines..." size="small" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
           sx={{ mb: 3, mt: 2, maxWidth: 400, '& .MuiOutlinedInput-root': { bgcolor: '#fff' } }} fullWidth
-          InputProps={{ startAdornment: <InputAdornment position="start"><SearchRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> }} />
+          slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> } }} />
 
         {loading ? (
           <Box sx={{ textAlign: 'center', py: 8 }}><Typography sx={{ color: '#5A7A7A' }}>Loading...</Typography></Box>
@@ -91,7 +145,7 @@ function Medicines() {
             {filteredMedicines.map((med, i) => {
               const colors = ['#114B4B', '#8D5D46', '#27AE60', '#1162d4']
               const c = colors[i % colors.length]
-              const supplyDays = Math.floor(Math.random() * 20 + 5)
+              const supplyDays = stableSupplyDays(med._id)
               return (
                 <Grid item xs={12} sm={6} lg={4} key={med._id}>
                   <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -120,7 +174,7 @@ function Medicines() {
                     </CardContent>
                     <Divider />
                     <CardActions sx={{ px: 2, py: 1 }}>
-                      <Button size="small" startIcon={<EditRoundedIcon sx={{ fontSize: 16 }} />} sx={{ color: '#5A7A7A' }}>Edit</Button>
+                      <Button size="small" startIcon={<EditRoundedIcon sx={{ fontSize: 16 }} />} sx={{ color: '#5A7A7A' }} onClick={() => openEditDialog(med)}>Edit</Button>
                       <Button size="small" startIcon={<DeleteRoundedIcon sx={{ fontSize: 16 }} />} color="error" onClick={() => handleDelete(med._id)}>Delete</Button>
                     </CardActions>
                   </Card>
@@ -150,30 +204,30 @@ function Medicines() {
           </Card>
         )}
 
-        <Dialog open={showModal} onClose={() => setShowModal(false)} maxWidth="sm" fullWidth>
+        <Dialog open={showModal} onClose={closeDialog} maxWidth="sm" fullWidth>
           <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6" fontWeight={600} sx={{ color: '#114B4B' }}>Add New Medicine</Typography>
-            <IconButton onClick={() => setShowModal(false)} size="small"><CloseRoundedIcon /></IconButton>
+            <Typography variant="h6" fontWeight={600} sx={{ color: '#114B4B' }}>{editingMedicine ? 'Edit Medicine' : 'Add New Medicine'}</Typography>
+            <IconButton onClick={closeDialog} size="small"><CloseRoundedIcon /></IconButton>
           </DialogTitle>
           <DialogContent dividers>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 1 }}>
-              <TextField label="Medicine Name" value={newMedicine.name} onChange={(e) => setNewMedicine({ ...newMedicine, name: e.target.value })} fullWidth />
+              <TextField label="Medicine Name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} fullWidth />
               <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-                <TextField label="Dosage" value={newMedicine.dose} onChange={(e) => setNewMedicine({ ...newMedicine, dose: e.target.value })} />
-                <FormControl><InputLabel>Unit</InputLabel><Select value={newMedicine.unit} onChange={(e) => setNewMedicine({ ...newMedicine, unit: e.target.value })} label="Unit">
+                <TextField label="Dosage" value={formData.dose} onChange={(e) => setFormData({ ...formData, dose: e.target.value })} />
+                <FormControl><InputLabel>Unit</InputLabel><Select value={formData.unit} onChange={(e) => setFormData({ ...formData, unit: e.target.value })} label="Unit">
                   <MenuItem value="mg">mg</MenuItem><MenuItem value="ml">ml</MenuItem><MenuItem value="tablet">tablet</MenuItem>
                 </Select></FormControl>
               </Box>
-              <FormControl><InputLabel>Frequency</InputLabel><Select value={newMedicine.frequency} onChange={(e) => setNewMedicine({ ...newMedicine, frequency: e.target.value })} label="Frequency">
+              <FormControl><InputLabel>Frequency</InputLabel><Select value={formData.frequency} onChange={(e) => setFormData({ ...formData, frequency: e.target.value })} label="Frequency">
                 <MenuItem value="Daily">Daily</MenuItem><MenuItem value="Twice Daily">Twice Daily</MenuItem><MenuItem value="Weekly">Weekly</MenuItem>
               </Select></FormControl>
-              <TextField label="Time" value={newMedicine.time} onChange={(e) => setNewMedicine({ ...newMedicine, time: e.target.value })} placeholder="e.g. 8:00 AM" />
-              <TextField label="Notes" value={newMedicine.notes} onChange={(e) => setNewMedicine({ ...newMedicine, notes: e.target.value })} multiline rows={2} />
+              <TextField label="Time" value={formData.time} onChange={(e) => setFormData({ ...formData, time: e.target.value })} placeholder="e.g. 8:00 AM" />
+              <TextField label="Notes" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} multiline rows={2} />
             </Box>
           </DialogContent>
           <DialogActions sx={{ px: 3, py: 2 }}>
-            <Button onClick={() => setShowModal(false)} sx={{ color: '#5A7A7A' }}>Cancel</Button>
-            <Button onClick={handleSave} variant="contained" sx={{ bgcolor: '#114B4B', '&:hover': { bgcolor: '#0C3636' } }}>Save Medicine</Button>
+            <Button onClick={closeDialog} sx={{ color: '#5A7A7A' }}>Cancel</Button>
+            <Button onClick={handleSave} variant="contained" sx={{ bgcolor: '#114B4B', '&:hover': { bgcolor: '#0C3636' } }}>{editingMedicine ? 'Update Medicine' : 'Save Medicine'}</Button>
           </DialogActions>
         </Dialog>
       </Box>

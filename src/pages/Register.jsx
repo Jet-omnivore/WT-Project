@@ -1,4 +1,4 @@
-// Register.jsx — Fixed borderRadius
+// Register.jsx — Fixed for MUI v9 (slotProps instead of InputProps)
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar.jsx'
@@ -13,9 +13,12 @@ import Checkbox from '@mui/material/Checkbox'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import CircularProgress from '@mui/material/CircularProgress'
 import InputAdornment from '@mui/material/InputAdornment'
+import IconButton from '@mui/material/IconButton'
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded'
 import EmailRoundedIcon from '@mui/icons-material/EmailRounded'
 import LockRoundedIcon from '@mui/icons-material/LockRounded'
+import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded'
+import VisibilityOffRoundedIcon from '@mui/icons-material/VisibilityOffRounded'
 import LocalHospitalRoundedIcon from '@mui/icons-material/LocalHospitalRounded'
 import VolunteerActivismRoundedIcon from '@mui/icons-material/VolunteerActivismRounded'
 import { authAPI, saveAuth } from '../api.js'
@@ -28,6 +31,8 @@ function Register() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [role, setRole] = useState('')
   const [termsAccepted, setTermsAccepted] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [errors, setErrors] = useState({})
   const [serverError, setServerError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -65,13 +70,19 @@ function Register() {
             {serverError && <Alert severity="error" sx={{ mb: 3 }}>{serverError}</Alert>}
             <Box component="form" onSubmit={handleSubmit}>
               <TextField fullWidth label="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} error={!!errors.fullName} helperText={errors.fullName} sx={{ mb: 2 }}
-                InputProps={{ startAdornment: <InputAdornment position="start"><PersonRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> }} />
+                slotProps={{ input: { startAdornment: <InputAdornment position="start"><PersonRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> } }} />
               <TextField fullWidth label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} error={!!errors.email} helperText={errors.email} sx={{ mb: 2 }}
-                InputProps={{ startAdornment: <InputAdornment position="start"><EmailRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> }} />
-              <TextField fullWidth label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} error={!!errors.password} helperText={errors.password} sx={{ mb: 2 }}
-                InputProps={{ startAdornment: <InputAdornment position="start"><LockRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> }} />
-              <TextField fullWidth label="Confirm Password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} error={!!errors.confirmPassword} helperText={errors.confirmPassword} sx={{ mb: 3 }}
-                InputProps={{ startAdornment: <InputAdornment position="start"><LockRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> }} />
+                slotProps={{ input: { startAdornment: <InputAdornment position="start"><EmailRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> } }} />
+              <TextField fullWidth label="Password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} error={!!errors.password} helperText={errors.password} sx={{ mb: 2 }}
+                slotProps={{ input: {
+                  startAdornment: <InputAdornment position="start"><LockRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment>,
+                  endAdornment: <InputAdornment position="end"><IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small">{showPassword ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}</IconButton></InputAdornment>,
+                } }} />
+              <TextField fullWidth label="Confirm Password" type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} error={!!errors.confirmPassword} helperText={errors.confirmPassword} sx={{ mb: 3 }}
+                slotProps={{ input: {
+                  startAdornment: <InputAdornment position="start"><LockRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment>,
+                  endAdornment: <InputAdornment position="end"><IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} edge="end" size="small">{showConfirmPassword ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}</IconButton></InputAdornment>,
+                } }} />
 
               <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600, color: '#114B4B' }}>I am a...</Typography>
               <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>

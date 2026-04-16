@@ -1,4 +1,4 @@
-// Login.jsx — Fixed borderRadius
+// Login.jsx — Fixed for MUI v9 (slotProps instead of InputProps)
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar.jsx'
@@ -54,12 +54,12 @@ function Login() {
             {serverError && <Alert severity="error" sx={{ mb: 3 }}>{serverError}</Alert>}
             <Box component="form" onSubmit={handleSubmit}>
               <TextField fullWidth label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} error={!!emailError} helperText={emailError} sx={{ mb: 2.5 }}
-                InputProps={{ startAdornment: <InputAdornment position="start"><EmailRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> }} />
+                slotProps={{ input: { startAdornment: <InputAdornment position="start"><EmailRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> } }} />
               <TextField fullWidth label="Password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} error={!!passwordError} helperText={passwordError} sx={{ mb: 3.5 }}
-                InputProps={{
+                slotProps={{ input: {
                   startAdornment: <InputAdornment position="start"><LockRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment>,
                   endAdornment: <InputAdornment position="end"><IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small">{showPassword ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}</IconButton></InputAdornment>,
-                }} />
+                } }} />
               <Button type="submit" variant="contained" fullWidth size="large" disabled={loading}
                 sx={{ py: 1.5, mb: 3, bgcolor: '#114B4B', '&:hover': { bgcolor: '#0C3636' } }}>
                 {loading ? <CircularProgress size={24} color="inherit" /> : 'Login'}
