@@ -36,6 +36,10 @@ function Register() {
   const [errors, setErrors] = useState({})
   const [serverError, setServerError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [nameFocused, setNameFocused] = useState(false)
+  const [emailFocused, setEmailFocused] = useState(false)
+  const [passwordFocused, setPasswordFocused] = useState(false)
+  const [confirmFocused, setConfirmFocused] = useState(false)
 
   const validate = () => {
     const e = {}
@@ -69,19 +73,39 @@ function Register() {
             </Box>
             {serverError && <Alert severity="error" sx={{ mb: 3 }}>{serverError}</Alert>}
             <Box component="form" onSubmit={handleSubmit}>
-              <TextField fullWidth label="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} error={!!errors.fullName} helperText={errors.fullName} sx={{ mb: 2 }}
-                slotProps={{ input: { startAdornment: <InputAdornment position="start"><PersonRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> } }} />
-              <TextField fullWidth label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} error={!!errors.email} helperText={errors.email} sx={{ mb: 2 }}
-                slotProps={{ input: { startAdornment: <InputAdornment position="start"><EmailRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> } }} />
-              <TextField fullWidth label="Password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} error={!!errors.password} helperText={errors.password} sx={{ mb: 2 }}
+              <TextField fullWidth label="Full Name" value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                onFocus={() => setNameFocused(true)}
+                onBlur={() => setNameFocused(false)}
+                error={!!errors.fullName} helperText={errors.fullName} sx={{ mb: 2 }}
                 slotProps={{ input: {
-                  startAdornment: <InputAdornment position="start"><LockRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment>,
-                  endAdornment: <InputAdornment position="end"><IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small">{showPassword ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}</IconButton></InputAdornment>,
+                  startAdornment: (nameFocused || fullName) ? <InputAdornment position="start"><PersonRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> : null,
                 } }} />
-              <TextField fullWidth label="Confirm Password" type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} error={!!errors.confirmPassword} helperText={errors.confirmPassword} sx={{ mb: 3 }}
+              <TextField fullWidth label="Email" type="email" value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onFocus={() => setEmailFocused(true)}
+                onBlur={() => setEmailFocused(false)}
+                error={!!errors.email} helperText={errors.email} sx={{ mb: 2 }}
                 slotProps={{ input: {
-                  startAdornment: <InputAdornment position="start"><LockRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment>,
-                  endAdornment: <InputAdornment position="end"><IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} edge="end" size="small">{showConfirmPassword ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}</IconButton></InputAdornment>,
+                  startAdornment: (emailFocused || email) ? <InputAdornment position="start"><EmailRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> : null,
+                } }} />
+              <TextField fullWidth label="Password" type={showPassword ? 'text' : 'password'} value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
+                error={!!errors.password} helperText={errors.password} sx={{ mb: 2 }}
+                slotProps={{ input: {
+                  startAdornment: (passwordFocused || password) ? <InputAdornment position="start"><LockRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> : null,
+                  endAdornment: (passwordFocused || password) ? <InputAdornment position="end"><IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small">{showPassword ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}</IconButton></InputAdornment> : null,
+                } }} />
+              <TextField fullWidth label="Confirm Password" type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                onFocus={() => setConfirmFocused(true)}
+                onBlur={() => setConfirmFocused(false)}
+                error={!!errors.confirmPassword} helperText={errors.confirmPassword} sx={{ mb: 3 }}
+                slotProps={{ input: {
+                  startAdornment: (confirmFocused || confirmPassword) ? <InputAdornment position="start"><LockRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> : null,
+                  endAdornment: (confirmFocused || confirmPassword) ? <InputAdornment position="end"><IconButton onClick={() => setShowConfirmPassword(!showConfirmPassword)} edge="end" size="small">{showConfirmPassword ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}</IconButton></InputAdornment> : null,
                 } }} />
 
               <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600, color: '#114B4B' }}>I am a...</Typography>

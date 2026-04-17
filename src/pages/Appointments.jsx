@@ -32,6 +32,16 @@ import LocationOnRoundedIcon from '@mui/icons-material/LocationOnRounded'
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
 import EventNoteRoundedIcon from '@mui/icons-material/EventNoteRounded'
 
+// Convert 24h time string (e.g. "14:30") to 12h format with AM/PM
+const formatTime = (timeStr) => {
+  if (!timeStr) return ''
+  const [h, m] = timeStr.split(':').map(Number)
+  if (isNaN(h) || isNaN(m)) return timeStr
+  const period = h >= 12 ? 'PM' : 'AM'
+  const hour12 = h % 12 || 12
+  return `${hour12}:${String(m).padStart(2, '0')} ${period}`
+}
+
 function Appointments() {
   const navigate = useNavigate()
   const [appointments, setAppointments] = useState([])
@@ -41,6 +51,8 @@ function Appointments() {
   const [editingAppointment, setEditingAppointment] = useState(null)
   const emptyForm = { doctor: '', specialty: '', date: '', time: '', clinic: '', notes: '' }
   const [formData, setFormData] = useState(emptyForm)
+  const [dateFocused, setDateFocused] = useState(false)
+  const [timeFocused, setTimeFocused] = useState(false)
 
   useEffect(() => {
     if (!isLoggedIn()) { navigate('/login'); return }
@@ -162,7 +174,7 @@ function Appointments() {
                       </Box>
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><CalendarTodayRoundedIcon sx={{ fontSize: 16, color: '#5A7A7A' }} /><Typography variant="body2" sx={{ color: '#5A7A7A' }}>{apt.date}</Typography></Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><AccessTimeRoundedIcon sx={{ fontSize: 16, color: '#5A7A7A' }} /><Typography variant="body2" sx={{ color: '#5A7A7A' }}>{apt.time}</Typography></Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><AccessTimeRoundedIcon sx={{ fontSize: 16, color: '#5A7A7A' }} /><Typography variant="body2" sx={{ color: '#5A7A7A' }}>{formatTime(apt.time)}</Typography></Box>
                         {apt.clinic && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><LocationOnRoundedIcon sx={{ fontSize: 16, color: '#5A7A7A' }} /><Typography variant="body2" sx={{ color: '#5A7A7A' }}>{apt.clinic}</Typography></Box>}
                       </Box>
                       <Collapse in={isExpanded}>
@@ -195,8 +207,30 @@ function Appointments() {
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 1 }}>
               <TextField label="Doctor Name" value={formData.doctor} onChange={(e) => setFormData({ ...formData, doctor: e.target.value })} fullWidth />
               <TextField label="Specialty" value={formData.specialty} onChange={(e) => setFormData({ ...formData, specialty: e.target.value })} fullWidth />
-              <TextField label="Date" type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} slotProps={{ inputLabel: { shrink: true } }} fullWidth />
-              <TextField label="Time" type="time" value={formData.time} onChange={(e) => setFormData({ ...formData, time: e.target.value })} slotProps={{ inputLabel: { shrink: true } }} fullWidth />
+              <TextField label="Date" type="date" value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                onFocus={() => setDateFocused(true)}
+                onBlur={() => setDateFocused(false)}
+                slotProps={{ inputLabel: { shrink: dateFocused || !!formData.date } }}
+                sx={{
+                  '& input[type="date"]:not(:focus)': !formData.date ? {
+                    color: 'transparent',
+                    '&::-webkit-datetime-edit': { color: 'transparent' },
+                  } : {},
+                }}
+                fullWidth />
+              <TextField label="Time" type="time" value={formData.time}
+                onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                onFocus={() => setTimeFocused(true)}
+                onBlur={() => setTimeFocused(false)}
+                slotProps={{ inputLabel: { shrink: timeFocused || !!formData.time } }}
+                sx={{
+                  '& input[type="time"]:not(:focus)': !formData.time ? {
+                    color: 'transparent',
+                    '&::-webkit-datetime-edit': { color: 'transparent' },
+                  } : {},
+                }}
+                fullWidth />
               <TextField label="Clinic" value={formData.clinic} onChange={(e) => setFormData({ ...formData, clinic: e.target.value })} fullWidth />
               <TextField label="Notes" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} multiline rows={2} fullWidth />
             </Box>

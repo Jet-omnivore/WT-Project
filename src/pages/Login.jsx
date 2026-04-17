@@ -27,6 +27,8 @@ function Login() {
   const [passwordError, setPasswordError] = useState('')
   const [serverError, setServerError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [emailFocused, setEmailFocused] = useState(false)
+  const [passwordFocused, setPasswordFocused] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -53,12 +55,22 @@ function Login() {
             </Box>
             {serverError && <Alert severity="error" sx={{ mb: 3 }}>{serverError}</Alert>}
             <Box component="form" onSubmit={handleSubmit}>
-              <TextField fullWidth label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} error={!!emailError} helperText={emailError} sx={{ mb: 2.5 }}
-                slotProps={{ input: { startAdornment: <InputAdornment position="start"><EmailRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> } }} />
-              <TextField fullWidth label="Password" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} error={!!passwordError} helperText={passwordError} sx={{ mb: 3.5 }}
+              <TextField fullWidth label="Email" type="email" value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onFocus={() => setEmailFocused(true)}
+                onBlur={() => setEmailFocused(false)}
+                error={!!emailError} helperText={emailError} sx={{ mb: 2.5 }}
                 slotProps={{ input: {
-                  startAdornment: <InputAdornment position="start"><LockRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment>,
-                  endAdornment: <InputAdornment position="end"><IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small">{showPassword ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}</IconButton></InputAdornment>,
+                  startAdornment: (emailFocused || email) ? <InputAdornment position="start"><EmailRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> : null,
+                } }} />
+              <TextField fullWidth label="Password" type={showPassword ? 'text' : 'password'} value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
+                error={!!passwordError} helperText={passwordError} sx={{ mb: 3.5 }}
+                slotProps={{ input: {
+                  startAdornment: (passwordFocused || password) ? <InputAdornment position="start"><LockRoundedIcon sx={{ color: '#5A7A7A', fontSize: 20 }} /></InputAdornment> : null,
+                  endAdornment: (passwordFocused || password) ? <InputAdornment position="end"><IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small">{showPassword ? <VisibilityOffRoundedIcon fontSize="small" /> : <VisibilityRoundedIcon fontSize="small" />}</IconButton></InputAdornment> : null,
                 } }} />
               <Button type="submit" variant="contained" fullWidth size="large" disabled={loading}
                 sx={{ py: 1.5, mb: 3, bgcolor: '#114B4B', '&:hover': { bgcolor: '#0C3636' } }}>

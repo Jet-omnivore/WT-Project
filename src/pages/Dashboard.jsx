@@ -22,6 +22,16 @@ import TipsAndUpdatesRoundedIcon from '@mui/icons-material/TipsAndUpdatesRounded
 import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded'
 import LocalFireDepartmentRoundedIcon from '@mui/icons-material/LocalFireDepartmentRounded'
 
+// Convert 24h time string (e.g. "14:30") to 12h format with AM/PM
+const formatTime = (timeStr) => {
+  if (!timeStr) return ''
+  const [h, m] = timeStr.split(':').map(Number)
+  if (isNaN(h) || isNaN(m)) return timeStr
+  const period = h >= 12 ? 'PM' : 'AM'
+  const hour12 = h % 12 || 12
+  return `${hour12}:${String(m).padStart(2, '0')} ${period}`
+}
+
 // Helper to get today's date string for localStorage scoping
 const getTodayKey = (suffix) => {
   const today = new Date().toISOString().slice(0, 10) // e.g. "2026-04-17"
@@ -146,7 +156,7 @@ function Dashboard() {
                           {apt.specialty && <Chip label={apt.specialty} size="small" sx={{ bgcolor: '#E4F2F2', color: '#114B4B', mt: 0.5, fontWeight: 500 }} />}
                           <Box sx={{ display: 'flex', gap: 2, mt: 1.5 }}>
                             <Typography variant="body2" sx={{ color: '#5A7A7A' }}>📆 {apt.date}</Typography>
-                            <Typography variant="body2" sx={{ color: '#5A7A7A' }}>🕐 {apt.time}</Typography>
+                            <Typography variant="body2" sx={{ color: '#5A7A7A' }}>🕐 {formatTime(apt.time)}</Typography>
                           </Box>
                         </CardContent>
                       </Card>
