@@ -19,6 +19,7 @@ import MedicationRoundedIcon from '@mui/icons-material/MedicationRounded'
 import EventNoteRoundedIcon from '@mui/icons-material/EventNoteRounded'
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
+import NotificationCenter from '../components/NotificationCenter.jsx'
 
 function Profile() {
   const navigate = useNavigate()
@@ -37,7 +38,10 @@ function Profile() {
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#E4F2F2' }}>
       <Sidebar />
       <Box component="main" sx={{ flexGrow: 1, ml: { md: `${DRAWER_WIDTH}px` }, p: { xs: 2, md: 4 }, pb: { xs: 10, md: 4 } }}>
-        <Typography variant="h4" fontWeight={700} sx={{ color: '#114B4B', mb: 4 }}>My Profile</Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+          <Typography variant="h4" fontWeight={700} sx={{ color: '#114B4B' }}>My Profile</Typography>
+          <NotificationCenter />
+        </Box>
         <Box sx={{ maxWidth: 600, mx: 'auto' }}>
           <Card sx={{ textAlign: 'center', mb: 3 }}>
             <CardContent sx={{ py: 5 }}>

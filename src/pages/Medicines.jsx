@@ -33,6 +33,8 @@ import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded'
 import TipsAndUpdatesRoundedIcon from '@mui/icons-material/TipsAndUpdatesRounded'
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded'
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
+import { formatTime } from '../utils/notificationService.js'
+import NotificationCenter from '../components/NotificationCenter.jsx'
 
 // Deterministic hash to generate a stable supply number from a medicine ID
 function stableSupplyDays(id) {
@@ -54,6 +56,7 @@ function Medicines() {
   const [editingMedicine, setEditingMedicine] = useState(null)
   const emptyForm = { name: '', dose: '', unit: 'mg', frequency: 'Daily', time: '', notes: '' }
   const [formData, setFormData] = useState(emptyForm)
+  const [timeFocused, setTimeFocused] = useState(false)
 
   useEffect(() => {
     if (!isLoggedIn()) { navigate('/login'); return }
@@ -130,8 +133,11 @@ function Medicines() {
             <Typography variant="h4" fontWeight={700} sx={{ color: '#114B4B' }}>My Medications</Typography>
             <Typography variant="body2" sx={{ color: '#5A7A7A', mt: 0.5 }}>Track and manage your daily health routine.</Typography>
           </Box>
-          <Button variant="contained" startIcon={<AddRoundedIcon />} onClick={openAddDialog}
-            sx={{ bgcolor: '#114B4B', '&:hover': { bgcolor: '#0C3636' } }}>Add Medicine</Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button variant="contained" startIcon={<AddRoundedIcon />} onClick={openAddDialog}
+              sx={{ bgcolor: '#114B4B', '&:hover': { bgcolor: '#0C3636' } }}>Add Medicine</Button>
+            <NotificationCenter />
+          </Box>
         </Box>
 
         <TextField placeholder="Search medicines..." size="small" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
@@ -162,7 +168,7 @@ function Medicines() {
                           sx={{ bgcolor: med.status === 'active' ? '#E8F8EF' : '#F5F5F5', color: med.status === 'active' ? '#27AE60' : '#999', fontSize: '0.7rem', fontWeight: 600 }} />
                       </Box>
                       <Typography variant="body2" sx={{ color: '#5A7A7A', mb: 0.5 }}>🔁 {med.frequency || 'Daily'}</Typography>
-                      <Typography variant="body2" sx={{ color: '#5A7A7A' }}>🕐 {med.time}</Typography>
+                      <Typography variant="body2" sx={{ color: '#5A7A7A' }}>🕐 {formatTime(med.time)}</Typography>
                       <Box sx={{ mt: 2.5 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                           <Typography variant="caption" sx={{ color: '#5A7A7A' }}>Supply</Typography>
@@ -221,7 +227,17 @@ function Medicines() {
               <FormControl><InputLabel>Frequency</InputLabel><Select value={formData.frequency} onChange={(e) => setFormData({ ...formData, frequency: e.target.value })} label="Frequency">
                 <MenuItem value="Daily">Daily</MenuItem><MenuItem value="Twice Daily">Twice Daily</MenuItem><MenuItem value="Weekly">Weekly</MenuItem>
               </Select></FormControl>
-              <TextField label="Time" value={formData.time} onChange={(e) => setFormData({ ...formData, time: e.target.value })} placeholder="e.g. 8:00 AM" />
+              <TextField label="Time" type="time" value={formData.time}
+                onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                onFocus={() => setTimeFocused(true)}
+                onBlur={() => setTimeFocused(false)}
+                slotProps={{ inputLabel: { shrink: timeFocused || !!formData.time } }}
+                sx={{
+                  '& input[type="time"]:not(:focus)': !formData.time ? {
+                    color: 'transparent',
+                    '&::-webkit-datetime-edit': { color: 'transparent' },
+                  } : {},
+                }} />
               <TextField label="Notes" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} multiline rows={2} />
             </Box>
           </DialogContent>

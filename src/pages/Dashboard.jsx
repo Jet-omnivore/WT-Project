@@ -21,16 +21,8 @@ import EventNoteRoundedIcon from '@mui/icons-material/EventNoteRounded'
 import TipsAndUpdatesRoundedIcon from '@mui/icons-material/TipsAndUpdatesRounded'
 import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded'
 import LocalFireDepartmentRoundedIcon from '@mui/icons-material/LocalFireDepartmentRounded'
-
-// Convert 24h time string (e.g. "14:30") to 12h format with AM/PM
-const formatTime = (timeStr) => {
-  if (!timeStr) return ''
-  const [h, m] = timeStr.split(':').map(Number)
-  if (isNaN(h) || isNaN(m)) return timeStr
-  const period = h >= 12 ? 'PM' : 'AM'
-  const hour12 = h % 12 || 12
-  return `${hour12}:${String(m).padStart(2, '0')} ${period}`
-}
+import { formatTime } from '../utils/notificationService.js'
+import NotificationCenter from '../components/NotificationCenter.jsx'
 
 // Helper to get today's date string for localStorage scoping
 const getTodayKey = (suffix) => {
@@ -88,9 +80,12 @@ function Dashboard() {
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#E4F2F2' }}>
       <Sidebar />
       <Box component="main" sx={{ flexGrow: 1, ml: { md: `${DRAWER_WIDTH}px` }, p: { xs: 2, md: 4 }, pb: { xs: 10, md: 4 } }}>
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" fontWeight={700} sx={{ color: '#114B4B', mb: 0.5 }}>{greeting}, {user?.fullName?.split(' ')[0] || 'User'} 👋</Typography>
-          <Typography variant="body2" sx={{ color: '#5A7A7A' }}>You have {medicines.length} medication{medicines.length !== 1 ? 's' : ''} scheduled today.</Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
+          <Box>
+            <Typography variant="h4" fontWeight={700} sx={{ color: '#114B4B', mb: 0.5 }}>{greeting}, {user?.fullName?.split(' ')[0] || 'User'} 👋</Typography>
+            <Typography variant="body2" sx={{ color: '#5A7A7A' }}>You have {medicines.length} medication{medicines.length !== 1 ? 's' : ''} scheduled today.</Typography>
+          </Box>
+          <NotificationCenter />
         </Box>
 
         <Grid container spacing={3}>
@@ -116,7 +111,7 @@ function Dashboard() {
                                 <Avatar sx={{ bgcolor: '#114B4B', width: 44, height: 44 }}><MedicationRoundedIcon sx={{ fontSize: 22 }} /></Avatar>
                                 <Box>
                                   <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#114B4B' }}>{med.name}</Typography>
-                                  <Typography variant="body2" sx={{ color: '#5A7A7A' }}>{med.dose} • {med.frequency || 'Once daily'} • {med.time}</Typography>
+                                  <Typography variant="body2" sx={{ color: '#5A7A7A' }}>{med.dose} • {med.frequency || 'Once daily'} • {formatTime(med.time)}</Typography>
                                 </Box>
                               </Box>
                               {status === 'taken' && <Chip icon={<CheckCircleRoundedIcon />} label="Taken" color="success" size="small" variant="outlined" />}

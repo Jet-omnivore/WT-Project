@@ -15,6 +15,7 @@ import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded'
 import CalendarMonthRoundedIcon from '@mui/icons-material/CalendarMonthRounded'
 import PersonRoundedIcon from '@mui/icons-material/PersonRounded'
 import TipsAndUpdatesRoundedIcon from '@mui/icons-material/TipsAndUpdatesRounded'
+import NotificationCenter from '../components/NotificationCenter.jsx'
 
 function Calendar() {
   const navigate = useNavigate()
@@ -50,9 +51,12 @@ function Calendar() {
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#E4F2F2' }}>
       <Sidebar />
       <Box component="main" sx={{ flexGrow: 1, ml: { md: `${DRAWER_WIDTH}px` }, p: { xs: 2, md: 4 }, pb: { xs: 10, md: 4 } }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-          <CalendarMonthRoundedIcon sx={{ color: '#114B4B', fontSize: 28 }} />
-          <Typography variant="h4" fontWeight={700} sx={{ color: '#114B4B' }}>Health Calendar</Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <CalendarMonthRoundedIcon sx={{ color: '#114B4B', fontSize: 28 }} />
+            <Typography variant="h4" fontWeight={700} sx={{ color: '#114B4B' }}>Health Calendar</Typography>
+          </Box>
+          <NotificationCenter />
         </Box>
 
         <Grid container spacing={3}>

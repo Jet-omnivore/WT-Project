@@ -31,16 +31,8 @@ import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded'
 import LocationOnRoundedIcon from '@mui/icons-material/LocationOnRounded'
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
 import EventNoteRoundedIcon from '@mui/icons-material/EventNoteRounded'
-
-// Convert 24h time string (e.g. "14:30") to 12h format with AM/PM
-const formatTime = (timeStr) => {
-  if (!timeStr) return ''
-  const [h, m] = timeStr.split(':').map(Number)
-  if (isNaN(h) || isNaN(m)) return timeStr
-  const period = h >= 12 ? 'PM' : 'AM'
-  const hour12 = h % 12 || 12
-  return `${hour12}:${String(m).padStart(2, '0')} ${period}`
-}
+import { formatTime } from '../utils/notificationService.js'
+import NotificationCenter from '../components/NotificationCenter.jsx'
 
 function Appointments() {
   const navigate = useNavigate()
@@ -139,8 +131,11 @@ function Appointments() {
             <Typography variant="h4" fontWeight={700} sx={{ color: '#114B4B' }}>Your Schedule</Typography>
             <Typography variant="body2" sx={{ color: '#5A7A7A', mt: 0.5 }}>{appointments.length} appointment{appointments.length !== 1 ? 's' : ''}</Typography>
           </Box>
-          <Button variant="contained" startIcon={<AddRoundedIcon />} onClick={openAddDialog}
-            sx={{ bgcolor: '#114B4B', '&:hover': { bgcolor: '#0C3636' } }}>Add Appointment</Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button variant="contained" startIcon={<AddRoundedIcon />} onClick={openAddDialog}
+              sx={{ bgcolor: '#114B4B', '&:hover': { bgcolor: '#0C3636' } }}>Add Appointment</Button>
+            <NotificationCenter />
+          </Box>
         </Box>
 
         {loading ? (
