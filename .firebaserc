@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "mediremind-51078"
-  }
+    "default": "mediremind-51078",
+    "mrtesting": "mediremind-testing"
+  },
+  "targets": {},
+  "etags": {}
 }
