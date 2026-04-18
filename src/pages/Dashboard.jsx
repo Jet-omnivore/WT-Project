@@ -99,6 +99,19 @@ function Dashboard() {
     })
   }
 
+  // Undo skipped — with confirmation
+  const handleUndoSkipped = (med) => {
+    setConfirmDialog({
+      open: true,
+      title: 'Undo Skip',
+      message: `Are you sure you want to undo skipping "${med.name}"?`,
+      onConfirm: () => {
+        setSkippedIds(skippedIds.filter(id => id !== med._id))
+        setConfirmDialog({ open: false, title: '', message: '', onConfirm: null })
+      }
+    })
+  }
+
   // Mark appointment as attended
   const handleMarkAttended = (id) => setAttendedIds([...attendedIds, id])
 
@@ -147,15 +160,15 @@ function Dashboard() {
                       const status = getCardStatus(med._id)
                       return (
                         <Card key={med._id} variant="outlined"
-                          onClick={status === 'taken' ? () => handleUndoTaken(med) : undefined}
+                          onClick={status === 'taken' ? () => handleUndoTaken(med) : status === 'skipped' ? () => handleUndoSkipped(med) : undefined}
                           sx={{
                             bgcolor: status === 'taken' ? '#E8F8EF' : status === 'skipped' ? '#F5F5F5' : '#F8FDFD',
                             borderColor: status === 'taken' ? '#27AE60' : 'rgba(17,75,75,0.1)',
                             boxShadow: 'none',
-                            cursor: status === 'taken' ? 'pointer' : 'default',
+                            cursor: (status === 'taken' || status === 'skipped') ? 'pointer' : 'default',
                             transition: 'all 0.2s ease',
                             '&:hover': {
-                              boxShadow: status === 'taken' ? '0 2px 12px rgba(39,174,96,0.15)' : 'none',
+                              boxShadow: status === 'taken' ? '0 2px 12px rgba(39,174,96,0.15)' : status === 'skipped' ? '0 2px 12px rgba(0,0,0,0.08)' : 'none',
                             },
                           }}>
                           <CardContent sx={{ pb: '8px !important' }}>
@@ -173,7 +186,12 @@ function Dashboard() {
                                   <UndoRoundedIcon sx={{ fontSize: 16, color: '#5A7A7A', opacity: 0.5 }} />
                                 </Box>
                               )}
-                              {status === 'skipped' && <Chip icon={<SkipNextRoundedIcon />} label="Skipped" size="small" variant="outlined" />}
+                              {status === 'skipped' && (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                  <Chip icon={<SkipNextRoundedIcon />} label="Skipped" size="small" variant="outlined" />
+                                  <UndoRoundedIcon sx={{ fontSize: 16, color: '#5A7A7A', opacity: 0.5 }} />
+                                </Box>
+                              )}
                             </Box>
                           </CardContent>
                           {status === 'pending' && (
