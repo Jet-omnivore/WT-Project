@@ -96,4 +96,26 @@ router.get('/me', auth, async (req, res) => {
   }
 })
 
+// PUT /api/auth/profile — Update current user's profile
+router.put('/profile', auth, async (req, res) => {
+  try {
+    const { fullName, role } = req.body
+    const updates = {}
+    if (fullName) updates.fullName = fullName.trim()
+    if (role && ['patient', 'caregiver'].includes(role)) updates.role = role
+
+    const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true }).select('-password')
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: { id: user._id, fullName: user.fullName, email: user.email, role: user.role }
+    })
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message })
+  }
+})
+
 module.exports = router

@@ -111,6 +111,34 @@ export const authAPI = {
   getMe: async () => {
     if (await isBackendUp()) return apiFetch('/auth/me')
     return getUser()
+  },
+
+  updateProfile: async (body) => {
+    if (await isBackendUp()) {
+      const data = await apiFetch('/auth/profile', { method: 'PUT', body: JSON.stringify(body) })
+      // Update locally stored user too
+      const currentUser = getUser()
+      const updated = { ...currentUser, ...data.user }
+      localStorage.setItem('user', JSON.stringify(updated))
+      return data
+    }
+    // Fallback: update localStorage directly
+    const currentUser = getUser()
+    if (!currentUser) throw new Error('Not logged in')
+    if (body.fullName) currentUser.fullName = body.fullName.trim()
+    if (body.role && ['patient', 'caregiver'].includes(body.role)) currentUser.role = body.role
+    localStorage.setItem('user', JSON.stringify(currentUser))
+
+    // Also update in local_users list
+    const users = getLocalData('local_users')
+    const idx = users.findIndex(u => u.id === currentUser.id)
+    if (idx !== -1) {
+      if (body.fullName) users[idx].fullName = body.fullName.trim()
+      if (body.role) users[idx].role = body.role
+      setLocalData('local_users', users)
+    }
+
+    return { message: 'Profile updated successfully', user: currentUser }
   }
 }
 

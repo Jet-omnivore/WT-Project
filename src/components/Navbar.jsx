@@ -50,7 +50,7 @@ function Navbar() {
     handleProfileMenuClose()
     setMobileOpen(false)
     logout()
-    navigate('/')
+    window.location.href = '/'
   }
 
   const handleMenuNavigate = (path) => {
@@ -79,10 +79,6 @@ function Navbar() {
           <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1.5, alignItems: 'center' }}>
             {loggedIn ? (
               <>
-                <Button component={Link} to="/dashboard" variant="outlined" size="small"
-                  sx={{ borderColor: 'rgba(17,75,75,0.2)', color: '#114B4B', fontWeight: 500, '&:hover': { borderColor: '#114B4B', bgcolor: 'rgba(17,75,75,0.04)' } }}>
-                  Dashboard
-                </Button>
                 <IconButton onClick={handleProfileMenuOpen} sx={{ p: 0.5 }}>
                   <Avatar sx={{ bgcolor: '#114B4B', color: '#fff', width: 36, height: 36, fontSize: '0.85rem', fontWeight: 700 }}>
                     {initials}
