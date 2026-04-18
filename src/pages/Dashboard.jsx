@@ -1,4 +1,4 @@
-// Dashboard.jsx — Fixed borderRadius
+// Dashboard.jsx — With undo taken, mark attended, and confirmation dialogs
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Sidebar, { DRAWER_WIDTH } from '../components/Sidebar.jsx'
@@ -14,6 +14,10 @@ import Avatar from '@mui/material/Avatar'
 import Divider from '@mui/material/Divider'
 import Grid from '@mui/material/Grid'
 import CircularProgress from '@mui/material/CircularProgress'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded'
 import SkipNextRoundedIcon from '@mui/icons-material/SkipNextRounded'
 import MedicationRoundedIcon from '@mui/icons-material/MedicationRounded'
@@ -21,6 +25,8 @@ import EventNoteRoundedIcon from '@mui/icons-material/EventNoteRounded'
 import TipsAndUpdatesRoundedIcon from '@mui/icons-material/TipsAndUpdatesRounded'
 import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded'
 import LocalFireDepartmentRoundedIcon from '@mui/icons-material/LocalFireDepartmentRounded'
+import UndoRoundedIcon from '@mui/icons-material/UndoRounded'
+import EventAvailableRoundedIcon from '@mui/icons-material/EventAvailableRounded'
 import { formatTime } from '../utils/notificationService.js'
 import NotificationCenter from '../components/NotificationCenter.jsx'
 
@@ -45,13 +51,17 @@ function Dashboard() {
   const [appointments, setAppointments] = useState([])
   const [takenIds, setTakenIds] = useState(() => loadPersistedIds('taken'))
   const [skippedIds, setSkippedIds] = useState(() => loadPersistedIds('skipped'))
+  const [attendedIds, setAttendedIds] = useState(() => loadPersistedIds('attended'))
+
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState({ open: false, title: '', message: '', onConfirm: null })
 
   useEffect(() => {
     if (!isLoggedIn()) { navigate('/login'); return }
     loadData()
   }, [])
 
-  // Persist taken/skipped IDs to localStorage whenever they change
+  // Persist taken/skipped/attended IDs to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem(getTodayKey('taken'), JSON.stringify(takenIds))
   }, [takenIds])
@@ -59,6 +69,10 @@ function Dashboard() {
   useEffect(() => {
     localStorage.setItem(getTodayKey('skipped'), JSON.stringify(skippedIds))
   }, [skippedIds])
+
+  useEffect(() => {
+    localStorage.setItem(getTodayKey('attended'), JSON.stringify(attendedIds))
+  }, [attendedIds])
 
   const loadData = async () => {
     try {
@@ -71,6 +85,35 @@ function Dashboard() {
   const handleTaken = (id) => setTakenIds([...takenIds, id])
   const handleSkip = (id) => setSkippedIds([...skippedIds, id])
   const getCardStatus = (id) => takenIds.includes(id) ? 'taken' : skippedIds.includes(id) ? 'skipped' : 'pending'
+
+  // Undo taken — with confirmation
+  const handleUndoTaken = (med) => {
+    setConfirmDialog({
+      open: true,
+      title: 'Undo Mark as Taken',
+      message: `Are you sure you want to undo marking "${med.name}" as taken?`,
+      onConfirm: () => {
+        setTakenIds(takenIds.filter(id => id !== med._id))
+        setConfirmDialog({ open: false, title: '', message: '', onConfirm: null })
+      }
+    })
+  }
+
+  // Mark appointment as attended
+  const handleMarkAttended = (id) => setAttendedIds([...attendedIds, id])
+
+  // Undo attended — with confirmation
+  const handleUndoAttended = (apt) => {
+    setConfirmDialog({
+      open: true,
+      title: 'Undo Mark as Attended',
+      message: `Are you sure you want to undo marking the appointment with "${apt.doctor}" as attended?`,
+      onConfirm: () => {
+        setAttendedIds(attendedIds.filter(id => id !== apt._id))
+        setConfirmDialog({ open: false, title: '', message: '', onConfirm: null })
+      }
+    })
+  }
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening'
@@ -104,7 +147,17 @@ function Dashboard() {
                       const status = getCardStatus(med._id)
                       return (
                         <Card key={med._id} variant="outlined"
-                          sx={{ bgcolor: status === 'taken' ? '#E8F8EF' : status === 'skipped' ? '#F5F5F5' : '#F8FDFD', borderColor: status === 'taken' ? '#27AE60' : 'rgba(17,75,75,0.1)', boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}>
+                          onClick={status === 'taken' ? () => handleUndoTaken(med) : undefined}
+                          sx={{
+                            bgcolor: status === 'taken' ? '#E8F8EF' : status === 'skipped' ? '#F5F5F5' : '#F8FDFD',
+                            borderColor: status === 'taken' ? '#27AE60' : 'rgba(17,75,75,0.1)',
+                            boxShadow: 'none',
+                            cursor: status === 'taken' ? 'pointer' : 'default',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              boxShadow: status === 'taken' ? '0 2px 12px rgba(39,174,96,0.15)' : 'none',
+                            },
+                          }}>
                           <CardContent sx={{ pb: '8px !important' }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                               <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
@@ -114,7 +167,12 @@ function Dashboard() {
                                   <Typography variant="body2" sx={{ color: '#5A7A7A' }}>{med.dose} • {med.frequency || 'Once daily'} • {formatTime(med.time)}</Typography>
                                 </Box>
                               </Box>
-                              {status === 'taken' && <Chip icon={<CheckCircleRoundedIcon />} label="Taken" color="success" size="small" variant="outlined" />}
+                              {status === 'taken' && (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                  <Chip icon={<CheckCircleRoundedIcon />} label="Taken" color="success" size="small" variant="outlined" />
+                                  <UndoRoundedIcon sx={{ fontSize: 16, color: '#5A7A7A', opacity: 0.5 }} />
+                                </Box>
+                              )}
                               {status === 'skipped' && <Chip icon={<SkipNextRoundedIcon />} label="Skipped" size="small" variant="outlined" />}
                             </Box>
                           </CardContent>
@@ -144,18 +202,50 @@ function Dashboard() {
                   <Typography sx={{ color: '#5A7A7A' }}>No upcoming appointments.</Typography>
                 ) : (
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    {appointments.map((apt) => (
-                      <Card key={apt._id} variant="outlined" sx={{ borderColor: 'rgba(17,75,75,0.08)', boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}>
-                        <CardContent sx={{ pb: '12px !important' }}>
-                          <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#114B4B' }}>{apt.doctor}</Typography>
-                          {apt.specialty && <Chip label={apt.specialty} size="small" sx={{ bgcolor: '#E4F2F2', color: '#114B4B', mt: 0.5, fontWeight: 500 }} />}
-                          <Box sx={{ display: 'flex', gap: 2, mt: 1.5 }}>
-                            <Typography variant="body2" sx={{ color: '#5A7A7A' }}>📆 {apt.date}</Typography>
-                            <Typography variant="body2" sx={{ color: '#5A7A7A' }}>🕐 {formatTime(apt.time)}</Typography>
-                          </Box>
-                        </CardContent>
-                      </Card>
-                    ))}
+                    {appointments.map((apt) => {
+                      const isAttended = attendedIds.includes(apt._id)
+                      return (
+                        <Card key={apt._id} variant="outlined"
+                          onClick={isAttended ? () => handleUndoAttended(apt) : undefined}
+                          sx={{
+                            borderColor: isAttended ? 'rgba(39,174,96,0.3)' : 'rgba(17,75,75,0.08)',
+                            bgcolor: isAttended ? '#F0FAF4' : '#fff',
+                            boxShadow: 'none',
+                            opacity: isAttended ? 0.7 : 1,
+                            cursor: isAttended ? 'pointer' : 'default',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              boxShadow: isAttended ? '0 2px 12px rgba(39,174,96,0.12)' : 'none',
+                              opacity: isAttended ? 0.85 : 1,
+                            },
+                          }}>
+                          <CardContent sx={{ pb: '12px !important' }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                              <Box>
+                                <Typography variant="subtitle1" fontWeight={600} sx={{ color: isAttended ? '#5A7A7A' : '#114B4B', textDecoration: isAttended ? 'line-through' : 'none' }}>{apt.doctor}</Typography>
+                                {apt.specialty && <Chip label={apt.specialty} size="small" sx={{ bgcolor: '#E4F2F2', color: '#114B4B', mt: 0.5, fontWeight: 500 }} />}
+                              </Box>
+                              {isAttended ? (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                  <Chip icon={<EventAvailableRoundedIcon />} label="Attended" size="small" color="success" variant="outlined" />
+                                  <UndoRoundedIcon sx={{ fontSize: 16, color: '#5A7A7A', opacity: 0.5 }} />
+                                </Box>
+                              ) : (
+                                <Button size="small" variant="outlined" startIcon={<EventAvailableRoundedIcon sx={{ fontSize: 16 }} />}
+                                  onClick={() => handleMarkAttended(apt._id)}
+                                  sx={{ borderColor: 'rgba(17,75,75,0.2)', color: '#114B4B', fontSize: '0.75rem', '&:hover': { borderColor: '#114B4B', bgcolor: 'rgba(17,75,75,0.04)' } }}>
+                                  Mark Attended
+                                </Button>
+                              )}
+                            </Box>
+                            <Box sx={{ display: 'flex', gap: 2, mt: 1.5 }}>
+                              <Typography variant="body2" sx={{ color: '#5A7A7A' }}>📆 {apt.date}</Typography>
+                              <Typography variant="body2" sx={{ color: '#5A7A7A' }}>🕐 {formatTime(apt.time)}</Typography>
+                            </Box>
+                          </CardContent>
+                        </Card>
+                      )
+                    })}
                   </Box>
                 )}
               </CardContent>
@@ -203,6 +293,24 @@ function Dashboard() {
           </Grid>
         </Grid>
       </Box>
+
+      {/* Confirmation Dialog */}
+      <Dialog
+        open={confirmDialog.open}
+        onClose={() => setConfirmDialog({ open: false, title: '', message: '', onConfirm: null })}
+        PaperProps={{ sx: { borderRadius: 3, px: 1 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 600, color: '#114B4B' }}>{confirmDialog.title}</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ color: '#5A7A7A' }}>{confirmDialog.message}</Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setConfirmDialog({ open: false, title: '', message: '', onConfirm: null })}
+            sx={{ color: '#5A7A7A' }}>No</Button>
+          <Button variant="contained" onClick={confirmDialog.onConfirm}
+            sx={{ bgcolor: '#114B4B', '&:hover': { bgcolor: '#0C3636' } }}>Yes</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }

@@ -1,4 +1,4 @@
-// Profile.jsx — Profile page with edit functionality
+// Profile.jsx — Profile page with edit functionality and logout confirmation
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Sidebar, { DRAWER_WIDTH } from '../components/Sidebar.jsx'
@@ -22,6 +22,10 @@ import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
 import Snackbar from '@mui/material/Snackbar'
 import Alert from '@mui/material/Alert'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
 import MedicationRoundedIcon from '@mui/icons-material/MedicationRounded'
 import EventNoteRoundedIcon from '@mui/icons-material/EventNoteRounded'
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded'
@@ -45,6 +49,7 @@ function Profile() {
 
   // Snackbar state
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' })
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
 
   useEffect(() => {
     if (!isLoggedIn()) { navigate('/login'); return }
@@ -217,7 +222,7 @@ function Profile() {
           </Card>
 
           <Button variant="contained" color="error" fullWidth size="large" startIcon={<LogoutRoundedIcon />}
-            onClick={() => { logout(); window.location.href = '/' }} sx={{ py: 1.5 }}>Logout</Button>
+            onClick={() => setLogoutConfirmOpen(true)} sx={{ py: 1.5 }}>Logout</Button>
         </Box>
       </Box>
 
@@ -237,6 +242,25 @@ function Profile() {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Logout Confirmation Dialog */}
+      <Dialog
+        open={logoutConfirmOpen}
+        onClose={() => setLogoutConfirmOpen(false)}
+        PaperProps={{ sx: { borderRadius: 3, px: 1 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 600, color: '#114B4B' }}>Confirm Logout</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ color: '#5A7A7A' }}>
+            Are you sure you want to log out of your account?
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setLogoutConfirmOpen(false)} sx={{ color: '#5A7A7A' }}>Cancel</Button>
+          <Button variant="contained" onClick={() => { logout(); window.location.href = '/' }}
+            sx={{ bgcolor: '#e74c3c', '&:hover': { bgcolor: '#c0392b' } }}>Logout</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }

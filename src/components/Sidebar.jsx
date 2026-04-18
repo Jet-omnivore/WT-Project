@@ -1,4 +1,5 @@
-// Sidebar.jsx — Dark teal sidebar, fixed borderRadius values
+// Sidebar.jsx — Dark teal sidebar with logout confirmation
+import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Drawer from '@mui/material/Drawer'
 import Box from '@mui/material/Box'
@@ -13,6 +14,10 @@ import Button from '@mui/material/Button'
 import BottomNavigation from '@mui/material/BottomNavigation'
 import BottomNavigationAction from '@mui/material/BottomNavigationAction'
 import Paper from '@mui/material/Paper'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded'
 import MedicalServicesRoundedIcon from '@mui/icons-material/MedicalServicesRounded'
 import EventNoteRoundedIcon from '@mui/icons-material/EventNoteRounded'
@@ -44,8 +49,15 @@ function Sidebar() {
   const location = useLocation()
   const navigate = useNavigate()
   const user = getUser()
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
 
-  const handleLogout = () => { logout(); navigate('/') }
+  const handleLogoutClick = () => setLogoutConfirmOpen(true)
+
+  const handleLogoutConfirm = () => {
+    setLogoutConfirmOpen(false)
+    logout()
+    window.location.href = '/'
+  }
 
   const initials = user?.fullName
     ? user.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -126,7 +138,7 @@ function Sidebar() {
 
         {/* Logout */}
         <Box sx={{ px: 2, pb: 1 }}>
-          <ListItemButton onClick={handleLogout} sx={{ borderRadius: 2, py: 1.2, px: 2, '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' } }}>
+          <ListItemButton onClick={handleLogoutClick} sx={{ borderRadius: 2, py: 1.2, px: 2, '&:hover': { bgcolor: 'rgba(255,255,255,0.08)' } }}>
             <ListItemIcon sx={{ color: 'rgba(255,255,255,0.5)', minWidth: 40 }}><LogoutRoundedIcon /></ListItemIcon>
             <ListItemText primary="Logout" primaryTypographyProps={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.6)' }} />
           </ListItemButton>
@@ -140,6 +152,25 @@ function Sidebar() {
           {bottomNavItems.map((item) => (<BottomNavigationAction key={item.label} label={item.label} icon={item.icon} />))}
         </BottomNavigation>
       </Paper>
+
+      {/* Logout Confirmation Dialog */}
+      <Dialog
+        open={logoutConfirmOpen}
+        onClose={() => setLogoutConfirmOpen(false)}
+        PaperProps={{ sx: { borderRadius: 3, px: 1 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 600, color: '#114B4B' }}>Confirm Logout</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ color: '#5A7A7A' }}>
+            Are you sure you want to log out of your account?
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setLogoutConfirmOpen(false)} sx={{ color: '#5A7A7A' }}>Cancel</Button>
+          <Button variant="contained" onClick={handleLogoutConfirm}
+            sx={{ bgcolor: '#e74c3c', '&:hover': { bgcolor: '#c0392b' } }}>Logout</Button>
+        </DialogActions>
+      </Dialog>
     </>
   )
 }

@@ -1,4 +1,4 @@
-// Navbar.jsx — Auth-aware navbar: shows profile avatar when logged in
+// Navbar.jsx — Auth-aware navbar with logout confirmation
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import AppBar from '@mui/material/AppBar'
@@ -17,6 +17,10 @@ import Divider from '@mui/material/Divider'
 import Avatar from '@mui/material/Avatar'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
 import MenuIcon from '@mui/icons-material/Menu'
 import CloseIcon from '@mui/icons-material/Close'
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital'
@@ -35,6 +39,7 @@ function Navbar() {
   const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [anchorEl, setAnchorEl] = useState(null)
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
 
   const loggedIn = isLoggedIn()
   const user = loggedIn ? getUser() : null
@@ -46,9 +51,14 @@ function Navbar() {
   const handleProfileMenuOpen = (event) => setAnchorEl(event.currentTarget)
   const handleProfileMenuClose = () => setAnchorEl(null)
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
     handleProfileMenuClose()
     setMobileOpen(false)
+    setLogoutConfirmOpen(true)
+  }
+
+  const handleLogoutConfirm = () => {
+    setLogoutConfirmOpen(false)
     logout()
     window.location.href = '/'
   }
@@ -110,7 +120,7 @@ function Navbar() {
                     <ListItemText primaryTypographyProps={{ fontSize: '0.875rem' }}>Profile</ListItemText>
                   </MenuItem>
                   <Divider />
-                  <MenuItem onClick={handleLogout}>
+                  <MenuItem onClick={handleLogoutClick}>
                     <ListItemIcon><LogoutRoundedIcon sx={{ color: '#e74c3c', fontSize: 20 }} /></ListItemIcon>
                     <ListItemText primaryTypographyProps={{ fontSize: '0.875rem', color: '#e74c3c' }}>Logout</ListItemText>
                   </MenuItem>
@@ -166,7 +176,7 @@ function Navbar() {
                 sx={{ bgcolor: '#FDE8D2', color: '#8D5D46', '&:hover': { bgcolor: '#fce0c4' } }}>Dashboard</Button>
               <Button component={Link} to="/profile" variant="outlined" fullWidth onClick={() => setMobileOpen(false)}
                 sx={{ borderColor: 'rgba(255,255,255,0.3)', color: '#fff' }}>Profile</Button>
-              <Button variant="outlined" fullWidth onClick={handleLogout}
+              <Button variant="outlined" fullWidth onClick={handleLogoutClick}
                 sx={{ borderColor: 'rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.7)', '&:hover': { borderColor: 'rgba(255,255,255,0.4)', bgcolor: 'rgba(255,255,255,0.05)' } }}>Logout</Button>
             </>
           ) : (
@@ -177,6 +187,25 @@ function Navbar() {
           )}
         </Box>
       </Drawer>
+
+      {/* Logout Confirmation Dialog */}
+      <Dialog
+        open={logoutConfirmOpen}
+        onClose={() => setLogoutConfirmOpen(false)}
+        PaperProps={{ sx: { borderRadius: 3, px: 1 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 600, color: '#114B4B' }}>Confirm Logout</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ color: '#5A7A7A' }}>
+            Are you sure you want to log out of your account?
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setLogoutConfirmOpen(false)} sx={{ color: '#5A7A7A' }}>Cancel</Button>
+          <Button variant="contained" onClick={handleLogoutConfirm}
+            sx={{ bgcolor: '#e74c3c', '&:hover': { bgcolor: '#c0392b' } }}>Logout</Button>
+        </DialogActions>
+      </Dialog>
     </>
   )
 }

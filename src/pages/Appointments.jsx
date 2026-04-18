@@ -1,4 +1,4 @@
-// Appointments.jsx — Fixed borderRadius
+// Appointments.jsx — Redesigned cards with accessible date/time/clinic layout
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Sidebar, { DRAWER_WIDTH } from '../components/Sidebar.jsx'
@@ -31,8 +31,20 @@ import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded'
 import LocationOnRoundedIcon from '@mui/icons-material/LocationOnRounded'
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded'
 import EventNoteRoundedIcon from '@mui/icons-material/EventNoteRounded'
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord'
 import { formatTime } from '../utils/notificationService.js'
 import NotificationCenter from '../components/NotificationCenter.jsx'
+
+// Helper to format date into a readable form for senior citizens
+const formatReadableDate = (dateStr) => {
+  if (!dateStr) return '-'
+  try {
+    const date = new Date(dateStr + 'T00:00:00')
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+  } catch {
+    return dateStr
+  }
+}
 
 function Appointments() {
   const navigate = useNavigate()
@@ -102,26 +114,6 @@ function Appointments() {
     try { await appointmentAPI.remove(id); setAppointments(appointments.filter(a => a._id !== id)) } catch (e) { alert(e.message) }
   }
 
-  // Status chip styles — "Upcoming" pops with a vivid treatment, "Done" stays muted
-  const getStatusChipSx = (status) => {
-    if (status === 'upcoming') {
-      return {
-        bgcolor: '#114B4B',
-        color: '#ffffff',
-        fontWeight: 700,
-        fontSize: '0.7rem',
-        boxShadow: '0 2px 8px rgba(17,75,75,0.25)',
-        '& .MuiChip-label': { px: 1.2 },
-      }
-    }
-    return {
-      bgcolor: '#F5F5F5',
-      color: '#999',
-      fontWeight: 600,
-      fontSize: '0.7rem',
-    }
-  }
-
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#E4F2F2' }}>
       <Sidebar />
@@ -149,35 +141,150 @@ function Appointments() {
           <Grid container spacing={2.5}>
             {appointments.map((apt) => {
               const isExpanded = expandedId === apt._id
+              const isUpcoming = apt.status === 'upcoming'
               return (
                 <Grid item xs={12} md={6} lg={4} key={apt._id}>
-                  <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                    <CardContent sx={{ flexGrow: 1, p: 3 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-                          <Avatar sx={{ bgcolor: '#114B4B', width: 44, height: 44 }}><PersonRoundedIcon sx={{ fontSize: 22 }} /></Avatar>
-                          <Box>
-                            <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#114B4B' }}>{apt.doctor}</Typography>
-                            {apt.specialty && <Chip label={apt.specialty} size="small" sx={{ bgcolor: '#E4F2F2', color: '#114B4B', mt: 0.3, fontWeight: 500, fontSize: '0.7rem' }} />}
+                  <Card sx={{
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflow: 'visible',
+                    position: 'relative',
+                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                    '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 8px 28px rgba(17,75,75,0.12)' },
+                  }}>
+                    <CardContent sx={{ flexGrow: 1, p: 0 }}>
+                      {/* Header with doctor info and status */}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', p: 2.5, pb: 2 }}>
+                        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', minWidth: 0, flex: 1 }}>
+                          <Avatar sx={{ bgcolor: isUpcoming ? '#114B4B' : '#D5D5D5', width: 44, height: 44, flexShrink: 0 }}>
+                            <PersonRoundedIcon sx={{ fontSize: 22 }} />
+                          </Avatar>
+                          <Box sx={{ minWidth: 0 }}>
+                            <Typography variant="subtitle1" fontWeight={600} sx={{ color: '#114B4B', lineHeight: 1.3 }} noWrap>{apt.doctor}</Typography>
+                            {apt.specialty && (
+                              <Chip label={apt.specialty} size="small"
+                                sx={{ bgcolor: '#E4F2F2', color: '#114B4B', mt: 0.5, fontWeight: 500, fontSize: '0.7rem', height: 22 }} />
+                            )}
                           </Box>
                         </Box>
-                        <Chip
-                          label={apt.status === 'upcoming' ? '● Upcoming' : '✓ Done'}
-                          size="small"
-                          sx={getStatusChipSx(apt.status)}
-                        />
+                        {isUpcoming ? (
+                          <Chip
+                            icon={<FiberManualRecordIcon sx={{ fontSize: '8px !important', animation: 'pulse 2s ease-in-out infinite', '@keyframes pulse': { '0%, 100%': { opacity: 1 }, '50%': { opacity: 0.4 } } }} />}
+                            label="Upcoming"
+                            size="small"
+                            sx={{
+                              bgcolor: '#114B4B',
+                              color: '#fff',
+                              fontWeight: 700,
+                              fontSize: '0.7rem',
+                              height: 26,
+                              borderRadius: '13px',
+                              boxShadow: '0 2px 10px rgba(17,75,75,0.3)',
+                              '& .MuiChip-icon': { color: '#4ADE80', ml: 0.5 },
+                              '& .MuiChip-label': { px: 1 },
+                            }}
+                          />
+                        ) : (
+                          <Chip
+                            label="✓ Done"
+                            size="small"
+                            sx={{ bgcolor: '#F0F0F0', color: '#999', fontWeight: 600, fontSize: '0.7rem', height: 26, borderRadius: '13px' }}
+                          />
+                        )}
                       </Box>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><CalendarTodayRoundedIcon sx={{ fontSize: 16, color: '#5A7A7A' }} /><Typography variant="body2" sx={{ color: '#5A7A7A' }}>{apt.date}</Typography></Box>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><AccessTimeRoundedIcon sx={{ fontSize: 16, color: '#5A7A7A' }} /><Typography variant="body2" sx={{ color: '#5A7A7A' }}>{formatTime(apt.time)}</Typography></Box>
-                        {apt.clinic && <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}><LocationOnRoundedIcon sx={{ fontSize: 16, color: '#5A7A7A' }} /><Typography variant="body2" sx={{ color: '#5A7A7A' }}>{apt.clinic}</Typography></Box>}
+
+                      {/* Date/Time/Clinic — prominent, senior-friendly info blocks */}
+                      <Box sx={{ px: 2.5, pb: 2 }}>
+                        <Box sx={{
+                          display: 'grid',
+                          gridTemplateColumns: apt.clinic ? '1fr 1fr' : '1fr 1fr',
+                          gap: 1.5,
+                        }}>
+                          {/* Date Block */}
+                          <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1.5,
+                            p: 1.5,
+                            borderRadius: 2.5,
+                            bgcolor: '#F0F8F8',
+                            border: '1px solid rgba(17,75,75,0.06)',
+                          }}>
+                            <Box sx={{
+                              width: 36, height: 36, borderRadius: '10px',
+                              bgcolor: '#114B4B', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              flexShrink: 0,
+                            }}>
+                              <CalendarTodayRoundedIcon sx={{ fontSize: 17, color: '#fff' }} />
+                            </Box>
+                            <Box sx={{ minWidth: 0 }}>
+                              <Typography sx={{ fontSize: '0.65rem', color: '#5A7A7A', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: 1.2 }}>Date</Typography>
+                              <Typography sx={{ fontSize: '0.85rem', color: '#114B4B', fontWeight: 600, lineHeight: 1.3 }} noWrap>{formatReadableDate(apt.date)}</Typography>
+                            </Box>
+                          </Box>
+
+                          {/* Time Block */}
+                          <Box sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1.5,
+                            p: 1.5,
+                            borderRadius: 2.5,
+                            bgcolor: '#FDF6EE',
+                            border: '1px solid rgba(141,93,70,0.08)',
+                          }}>
+                            <Box sx={{
+                              width: 36, height: 36, borderRadius: '10px',
+                              bgcolor: '#8D5D46', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              flexShrink: 0,
+                            }}>
+                              <AccessTimeRoundedIcon sx={{ fontSize: 17, color: '#fff' }} />
+                            </Box>
+                            <Box sx={{ minWidth: 0 }}>
+                              <Typography sx={{ fontSize: '0.65rem', color: '#5A7A7A', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: 1.2 }}>Time</Typography>
+                              <Typography sx={{ fontSize: '0.85rem', color: '#8D5D46', fontWeight: 600, lineHeight: 1.3 }} noWrap>{formatTime(apt.time)}</Typography>
+                            </Box>
+                          </Box>
+
+                          {/* Clinic Block — spans full width if present */}
+                          {apt.clinic && (
+                            <Box sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1.5,
+                              p: 1.5,
+                              borderRadius: 2.5,
+                              bgcolor: '#F5F0FB',
+                              border: '1px solid rgba(107,78,148,0.08)',
+                              gridColumn: '1 / -1',
+                            }}>
+                              <Box sx={{
+                                width: 36, height: 36, borderRadius: '10px',
+                                bgcolor: '#6B4E94', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                flexShrink: 0,
+                              }}>
+                                <LocationOnRoundedIcon sx={{ fontSize: 17, color: '#fff' }} />
+                              </Box>
+                              <Box sx={{ minWidth: 0 }}>
+                                <Typography sx={{ fontSize: '0.65rem', color: '#5A7A7A', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: 1.2 }}>Clinic</Typography>
+                                <Typography sx={{ fontSize: '0.85rem', color: '#6B4E94', fontWeight: 600, lineHeight: 1.3 }}>{apt.clinic}</Typography>
+                              </Box>
+                            </Box>
+                          )}
+                        </Box>
                       </Box>
+
+                      {/* Expandable Notes */}
                       <Collapse in={isExpanded}>
-                        {apt.notes && <Box sx={{ mt: 2, p: 2, bgcolor: '#E4F2F2', borderRadius: 2 }}>
-                          <Typography variant="body2" sx={{ color: '#5A7A7A' }}><strong>Notes:</strong> {apt.notes}</Typography>
-                        </Box>}
+                        {apt.notes && (
+                          <Box sx={{ mx: 2.5, mb: 2, p: 2, bgcolor: '#E4F2F2', borderRadius: 2 }}>
+                            <Typography variant="body2" sx={{ color: '#5A7A7A' }}><strong>Notes:</strong> {apt.notes}</Typography>
+                          </Box>
+                        )}
                       </Collapse>
                     </CardContent>
+
                     <Divider />
                     <CardActions sx={{ px: 2, py: 1, justifyContent: 'space-between' }}>
                       <Box sx={{ display: 'flex', gap: 0.5 }}>
