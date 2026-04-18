@@ -1,5 +1,6 @@
 // Home.jsx — Landing page with bento grid, fixed borderRadius
 import { Link } from 'react-router-dom'
+import { isLoggedIn } from '../api.js'
 import Navbar from '../components/Navbar.jsx'
 import Footer from '../components/Footer.jsx'
 import Box from '@mui/material/Box'
@@ -17,6 +18,8 @@ import InsightsRoundedIcon from '@mui/icons-material/InsightsRounded'
 import SecurityRoundedIcon from '@mui/icons-material/SecurityRounded'
 
 function Home() {
+  const loggedIn = isLoggedIn()
+
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#E4F2F2' }}>
       <Navbar />
@@ -35,8 +38,8 @@ function Home() {
                   A calm, intelligent system designed to orchestrate your health journey with editorial precision and spa-like tranquility.
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                  <Button component={Link} to="/register" variant="contained" size="large" endIcon={<ArrowForwardIcon />}
-                    sx={{ px: 4, py: 1.5, bgcolor: '#114B4B', '&:hover': { bgcolor: '#0C3636' } }}>Start Free</Button>
+                  <Button component={Link} to={loggedIn ? '/dashboard' : '/register'} variant="contained" size="large" endIcon={<ArrowForwardIcon />}
+                    sx={{ px: 4, py: 1.5, bgcolor: '#114B4B', '&:hover': { bgcolor: '#0C3636' } }}>{loggedIn ? 'Go to Dashboard' : 'Start Free'}</Button>
                   <Button component={Link} to="/about" variant="outlined" size="large"
                     sx={{ px: 4, py: 1.5, borderColor: '#114B4B', color: '#114B4B', '&:hover': { borderColor: '#0C3636', bgcolor: 'rgba(17,75,75,0.04)' } }}>Learn More</Button>
                 </Box>
@@ -173,8 +176,8 @@ function Home() {
         <Container maxWidth="sm">
           <Typography variant="h4" sx={{ color: '#fff', fontWeight: 700, mb: 2, fontSize: { xs: '1.6rem', md: '2rem' } }}>Begin your serene health journey</Typography>
           <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.65)', mb: 4, lineHeight: 1.7 }}>Join thousands who trust MediRemind as their personal health guardian.</Typography>
-          <Button component={Link} to="/register" variant="contained" size="large" endIcon={<ArrowForwardIcon />}
-            sx={{ bgcolor: '#FDE8D2', color: '#8D5D46', px: 5, py: 1.5, fontWeight: 700, '&:hover': { bgcolor: '#fce0c4' }, boxShadow: 'none' }}>Get Started Free</Button>
+          <Button component={Link} to={loggedIn ? '/dashboard' : '/register'} variant="contained" size="large" endIcon={<ArrowForwardIcon />}
+            sx={{ bgcolor: '#FDE8D2', color: '#8D5D46', px: 5, py: 1.5, fontWeight: 700, '&:hover': { bgcolor: '#fce0c4' }, boxShadow: 'none' }}>{loggedIn ? 'Go to Dashboard' : 'Get Started Free'}</Button>
         </Container>
       </Box>
 
